@@ -1,0 +1,40 @@
+name: Daily wildlife video
+
+on:
+  schedule:
+    - cron: "0 13 * * *"   # every day 13:00 UTC (18:00 Pakistan time)
+  workflow_dispatch: {}
+
+permissions:
+  contents: write   # lets the job commit history.json so topics don't repeat
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Restore Pixabay search cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/pixabay
+          key: pixabay-search-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: pixabay-search-${{ runner.os }}-
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: pip install -r requirements.txt
+      - name: Make and post video
+        env:
+          PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
+          FB_PAGE_ID: ${{ secrets.FB_PAGE_ID }}
+          FB_PAGE_TOKEN: ${{ secrets.FB_PAGE_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python main.py
+      - name: Save topic history
+        run: |
+          git config user.name "duck-bot"
+          git config user.email "duck-bot@users.noreply.github.com"
+          git add history.json || true
+          git diff --cached --quiet || (git commit -m "update topic history" && git push)
