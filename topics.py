@@ -43,7 +43,7 @@ TOPICS = {
     ],
 }
 
-ORDER = list(TOPICS)
+ORDER = ["duck_species"] * 5 + ["geese", "doves", "starlings", "forest_birds"]
 
 
 def _load():

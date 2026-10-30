@@ -8,7 +8,7 @@ VOICE = os.getenv("TTS_VOICE", "ur-PK-AsadNeural")
 
 
 async def _speak(text: str, out: str):
-    await edge_tts.Communicate(text, VOICE, rate="+0%").save(out)
+    await edge_tts.Communicate(text, VOICE, rate="-5%").save(out)
 
 
 def synthesize(text: str, out_path: str) -> str:

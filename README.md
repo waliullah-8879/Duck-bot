@@ -1,8 +1,8 @@
 # Bird Daily Video Bot
 
-Makes one short vertical Urdu video per day about ducks, geese, doves, starlings, and forest birds, then posts it to your Facebook Page.
+Makes one 4-6 minute vertical Urdu documentary per day about a single bird species, then posts it to your Facebook Page. Ducks are selected more often than other bird groups.
 
-**Pipeline:** pick topic → write script (Claude) → voiceover (edge-tts, free) → stock footage (Pixabay, free) → assemble with ffmpeg (1080x1920 + captions) → upload to Facebook Page.
+**Pipeline:** pick one bird → write a documentary script (Claude or Urdu fallback) → voiceover (edge-tts, free) → download up to 12 clips of that bird (Pixabay) → assemble with ffmpeg (1080x1920, no on-video captions) → upload to Facebook Page.
 
 ## 1. Setup (local test)
 
@@ -37,10 +37,10 @@ python main.py --dry-run       # builds output/<title>.mp4, does NOT post
 ## 4. Customize
 - **Topics:** edit `topics.py`. Rotation stays within ducks, geese, doves, starlings, and forest birds, and avoids repeats.
 - **Voice:** the default is Pakistani Urdu (`ur-PK-AsadNeural`). Set `TTS_VOICE` to another Urdu voice if preferred (run `edge-tts --list-voices`).
-- **Length / style:** edit the prompt in `script_gen.py`.
+- **Length / style:** edit the documentary prompt in `script_gen.py`. Adding `ANTHROPIC_API_KEY` enables longer, species-focused scripts; without it, the bot uses a general Urdu bird-documentary fallback.
 
 ## Things to know
-- **Language and footage:** narration is generated in Urdu, and footage searches are limited to the selected bird subject.
+- **Language and footage:** narration is in Urdu, and footage searches are limited to the selected bird subject. The video itself has no burned-in voiceover captions.
 - **Footage source:** Pixabay search responses are cached for 24 hours as required by its API terms, and the post description credits Pixabay.
 - **Repetitive content:** Facebook can reduce reach for fully automated, low-effort pages. Review the first videos, add your own clips/photos, and keep the facts accurate.
 - **Reels:** this uses the standard video endpoint. Facebook Reels use a separate multi-step upload API if you want to switch later.

@@ -51,7 +51,7 @@ def _search_videos(term: str, key: str) -> dict:
     return data
 
 
-def fetch_clips(terms: list[str], workdir: Path, want: int = 6) -> list[Path]:
+def fetch_clips(terms: list[str], workdir: Path, want: int = 12) -> list[Path]:
     key = os.getenv("PIXABAY_API_KEY", "").strip()
     if not key:
         raise RuntimeError("Set PIXABAY_API_KEY in your .env file before downloading footage.")
@@ -76,7 +76,6 @@ def fetch_clips(terms: list[str], workdir: Path, want: int = 6) -> list[Path]:
                     for chunk in dl.iter_content(1 << 20):
                         fh.write(chunk)
             clips.append(dest)
-            break  # one clip per search term keeps variety
     if not clips:
         raise RuntimeError("No stock clips found. Check PIXABAY_API_KEY / search terms.")
     return clips

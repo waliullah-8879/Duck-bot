@@ -43,7 +43,7 @@ def main():
         clips = fetch_clips(script["search_terms"], work)
         slug = "".join(c if c.isalnum() else "_" for c in script["title"])[:40]
         out = OUT_DIR / f"{slug}.mp4"
-        build_video(clips, audio, script["narration"], work, out)
+        build_video(clips, audio, work, out)
         print(f"[video] {out}")
     finally:
         shutil.rmtree(work, ignore_errors=True)
