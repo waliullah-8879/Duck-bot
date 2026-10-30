@@ -4,7 +4,7 @@ import os
 
 import edge_tts
 
-VOICE = os.getenv("TTS_VOICE", "en-US-GuyNeural")
+VOICE = os.getenv("TTS_VOICE", "ur-PK-AsadNeural")
 
 
 async def _speak(text: str, out: str):

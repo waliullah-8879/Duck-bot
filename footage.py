@@ -37,7 +37,7 @@ def _search_videos(term: str, key: str) -> dict:
     try:
         response = requests.get(
             API,
-            params={"key": key, "q": term, "per_page": 5, "safesearch": "true"},
+            params={"key": key, "q": term, "category": "animals", "per_page": 5, "safesearch": "true"},
             timeout=30,
         )
         response.raise_for_status()

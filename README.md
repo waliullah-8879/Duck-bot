@@ -1,6 +1,6 @@
-# Duck & Wildlife Daily Video Bot
+# Bird Daily Video Bot
 
-Makes one short vertical video per day (ducks, waterfowl, lawful hunting, wildlife) and posts it to your Facebook Page.
+Makes one short vertical Urdu video per day about ducks, geese, doves, starlings, and forest birds, then posts it to your Facebook Page.
 
 **Pipeline:** pick topic → write script (Claude) → voiceover (edge-tts, free) → stock footage (Pixabay, free) → assemble with ffmpeg (1080x1920 + captions) → upload to Facebook Page.
 
@@ -35,12 +35,12 @@ python main.py --dry-run       # builds output/<title>.mp4, does NOT post
 3. The workflow in `.github/workflows/daily.yml` runs daily (edit the cron line to change the time) and you can also trigger it manually from the Actions tab.
 
 ## 4. Customize
-- **Topics:** edit `topics.py`. Rotation goes species → wildlife → duck hunting → wild hunting and avoids repeats.
-- **Voice:** set `TTS_VOICE` (run `edge-tts --list-voices`).
+- **Topics:** edit `topics.py`. Rotation stays within ducks, geese, doves, starlings, and forest birds, and avoids repeats.
+- **Voice:** the default is Pakistani Urdu (`ur-PK-AsadNeural`). Set `TTS_VOICE` to another Urdu voice if preferred (run `edge-tts --list-voices`).
 - **Length / style:** edit the prompt in `script_gen.py`.
 
 ## Things to know
-- **Hunting content:** the prompt keeps it educational and legal (safety, ethics, conservation). Hunting rules differ by country/state, so the videos say regulations vary. Facebook can restrict content that looks like promoting weapons sales; keep it educational.
+- **Language and footage:** narration is generated in Urdu, and footage searches are limited to the selected bird subject.
 - **Footage source:** Pixabay search responses are cached for 24 hours as required by its API terms, and the post description credits Pixabay.
 - **Repetitive content:** Facebook can reduce reach for fully automated, low-effort pages. Review the first videos, add your own clips/photos, and keep the facts accurate.
 - **Reels:** this uses the standard video endpoint. Facebook Reels use a separate multi-step upload API if you want to switch later.
