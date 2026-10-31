@@ -34,9 +34,9 @@ def build_video(clips: list[Path], audio: Path, workdir: Path, out: Path) -> Pat
         parts.append(p)
 
     lst = workdir / "list.txt"
-    lst.write_text("".join(f"file '{p.resolve()}'\n" for p in parts))
+    lst.write_text("".join(f"file '{p.name}'\n" for p in parts), encoding="utf-8")
     joined = workdir / "joined.mp4"
-    run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-c", "copy", str(joined)])
+    run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-c", "copy", str(joined)], cwd=workdir)
 
     base = ["ffmpeg", "-y", "-i", str(joined), "-i", str(audio)]
     tail = ["-c:v", "libx264", "-preset", "slow", "-crf", "18", "-c:a", "aac", "-b:a", "192k",
