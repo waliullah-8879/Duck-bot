@@ -40,7 +40,8 @@ def main():
     work = Path(tempfile.mkdtemp(prefix="duckbot_"))
     try:
         audio = Path(synthesize(script["narration"], str(work / "voice.mp3")))
-        clips = fetch_clips(script["search_terms"], work)
+        species = topic.split(":", 1)[0].strip()
+        clips = fetch_clips(script["search_terms"], work, species)
         slug = "".join(c if c.isalnum() else "_" for c in script["title"])[:40]
         out = OUT_DIR / f"{slug}.mp4"
         build_video(clips, audio, work, out)

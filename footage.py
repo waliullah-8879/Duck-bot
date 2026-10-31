@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import time
 
 import requests
@@ -10,6 +11,8 @@ import requests
 API = "https://pixabay.com/api/videos/"
 CACHE_DIR = Path(__file__).parent / ".cache" / "pixabay"
 CACHE_TTL = 24 * 60 * 60
+MIN_SPECIES_CLIPS = 4
+GENERIC_SPECIES_WORDS = {"duck", "goose", "dove", "pigeon"}
 
 
 def _best_file(hit: dict):
@@ -19,6 +22,29 @@ def _best_file(hit: dict):
         if video_file and video_file.get("url"):
             return video_file
     return None
+
+
+def _normalize_words(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", value.casefold()).strip()
+
+
+def _matches_species(hit: dict, species: str) -> bool:
+    tags = hit.get("tags", "")
+    if isinstance(tags, list):
+        tags = ",".join(str(tag) for tag in tags)
+    normalized_tags = f" {_normalize_words(str(tags))} "
+    normalized_species = _normalize_words(species)
+    aliases = {normalized_species}
+
+    words = normalized_species.split()
+    if words and words[-1] in GENERIC_SPECIES_WORDS:
+        core = " ".join(words[:-1])
+        if len(core.split()) > 1 or len(core) >= 5:
+            aliases.add(core)
+    elif words and len(words[-1]) >= 5:
+        aliases.add(words[-1])
+
+    return any(alias and f" {alias} " in normalized_tags for alias in aliases)
 
 
 def _download_clip(url: str, dest: Path, attempts: int = 3) -> bool:
@@ -54,7 +80,7 @@ def _search_videos(term: str, key: str) -> dict:
     try:
         response = requests.get(
             API,
-            params={"key": key, "q": term, "category": "animals", "per_page": 5, "safesearch": "true"},
+            params={"key": key, "q": term, "category": "animals", "per_page": 20, "safesearch": "true"},
             timeout=30,
         )
         response.raise_for_status()
@@ -68,7 +94,7 @@ def _search_videos(term: str, key: str) -> dict:
     return data
 
 
-def fetch_clips(terms: list[str], workdir: Path, want: int = 12) -> list[Path]:
+def fetch_clips(terms: list[str], workdir: Path, species: str, want: int = 12) -> list[Path]:
     key = os.getenv("PIXABAY_API_KEY", "").strip()
     if not key:
         raise RuntimeError("Set PIXABAY_API_KEY in your .env file before downloading footage.")
@@ -82,6 +108,8 @@ def fetch_clips(terms: list[str], workdir: Path, want: int = 12) -> list[Path]:
             video_id = hit.get("id")
             if video_id is None or video_id in seen or len(clips) >= want:
                 continue
+            if not _matches_species(hit, species):
+                continue
             video_file = _best_file(hit)
             if not video_file:
                 continue
@@ -89,6 +117,10 @@ def fetch_clips(terms: list[str], workdir: Path, want: int = 12) -> list[Path]:
             dest = workdir / f"clip_{len(clips):02d}.mp4"
             if _download_clip(video_file["url"], dest):
                 clips.append(dest)
-    if not clips:
-        raise RuntimeError("No stock clips found. Check PIXABAY_API_KEY / search terms.")
+    minimum = min(MIN_SPECIES_CLIPS, want)
+    if len(clips) < minimum:
+        raise RuntimeError(
+            f"Pixabay returned only {len(clips)} clips tagged for {species!r}; "
+            f"at least {minimum} are required. No unrelated footage was used."
+        )
     return clips
