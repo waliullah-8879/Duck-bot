@@ -11,7 +11,7 @@ import requests
 API = "https://pixabay.com/api/videos/"
 CACHE_DIR = Path(__file__).parent / ".cache" / "pixabay"
 CACHE_TTL = 24 * 60 * 60
-CACHE_VERSION = 2
+CACHE_VERSION = 3
 MIN_SPECIES_CLIPS = 4
 GENERIC_SPECIES_WORDS = {"duck", "goose", "dove", "pigeon"}
 SCIENTIFIC_NAME_ALIASES = {
@@ -82,8 +82,8 @@ def _download_clip(url: str, dest: Path, attempts: int = 3) -> bool:
     return False
 
 
-def _search_videos(term: str, key: str) -> dict:
-    cache_key = f"v{CACHE_VERSION}:{term.casefold()}:animals:100:safe"
+def _search_videos(term: str, key: str, order: str) -> dict:
+    cache_key = f"v{CACHE_VERSION}:{term.casefold()}:animals:200:{order}:safe"
     cache_name = hashlib.sha256(cache_key.encode("utf-8")).hexdigest() + ".json"
     cache_file = CACHE_DIR / cache_name
     try:
@@ -95,7 +95,14 @@ def _search_videos(term: str, key: str) -> dict:
     try:
         response = requests.get(
             API,
-            params={"key": key, "q": term, "category": "animals", "per_page": 100, "safesearch": "true"},
+            params={
+                "key": key,
+                "q": term,
+                "category": "animals",
+                "per_page": 200,
+                "order": order,
+                "safesearch": "true",
+            },
             timeout=30,
         )
         response.raise_for_status()
@@ -116,22 +123,23 @@ def fetch_clips(terms: list[str], workdir: Path, species: str, want: int = 12) -
 
     clips: list[Path] = []
     seen: set[int] = set()
-    for term in terms:
-        if len(clips) >= want:
-            break
-        for hit in _search_videos(term, key).get("hits", []):
-            video_id = hit.get("id")
-            if video_id is None or video_id in seen or len(clips) >= want:
-                continue
-            if not _matches_species(hit, species):
-                continue
-            video_file = _best_file(hit)
-            if not video_file:
-                continue
-            seen.add(video_id)
-            dest = workdir / f"clip_{len(clips):02d}.mp4"
-            if _download_clip(video_file["url"], dest):
-                clips.append(dest)
+    for order in ("latest", "popular"):
+        for term in terms:
+            if len(clips) >= want:
+                break
+            for hit in _search_videos(term, key, order).get("hits", []):
+                video_id = hit.get("id")
+                if video_id is None or video_id in seen or len(clips) >= want:
+                    continue
+                if not _matches_species(hit, species):
+                    continue
+                video_file = _best_file(hit)
+                if not video_file:
+                    continue
+                seen.add(video_id)
+                dest = workdir / f"clip_{len(clips):02d}.mp4"
+                if _download_clip(video_file["url"], dest):
+                    clips.append(dest)
     minimum = min(MIN_SPECIES_CLIPS, want)
     if len(clips) < minimum:
         raise RuntimeError(

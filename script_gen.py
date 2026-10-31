@@ -16,7 +16,12 @@ SPECIES_SEARCH_ALIASES = {
     "eurasian wigeon": ["wigeon duck", "Mareca penelope"],
     "northern shoveler": ["shoveler duck", "Spatula clypeata"],
     "common eider": ["eider duck", "eider", "Somateria mollissima"],
-    "common goldeneye": ["goldeneye duck", "Bucephala clangula"],
+    "common goldeneye": [
+        "goldeneye duck",
+        "common goldeneye duck",
+        "goldeneye waterfowl",
+        "Bucephala clangula",
+    ],
 }
 
 PROMPT = """You write a 2-3 minute Urdu documentary for a vertical Facebook video.
