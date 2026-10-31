@@ -6,44 +6,102 @@ from pathlib import Path
 HISTORY = Path(__file__).parent / "history.json"
 
 TOPICS = {
-    "duck_species": [
-        "Mallard duck: how its plumage changes through the year",
-        "Wood duck: nesting in tree cavities",
-        "Northern pintail: a long-distance migratory duck",
-        "Green-winged teal: a small dabbling duck",
-        "Northern shoveler: how its broad bill helps it feed",
-        "Bufflehead: a tiny duck built for diving",
+    "ducks": [
+        "Common Pochard: diving behavior and seasonal plumage",
+        "Mallard Duck: identifying its changing seasonal plumage",
+        "Green-winged Teal: feeding behavior in shallow wetlands",
+        "Blue-winged Teal: migration and seasonal movement",
+        "Eurasian Teal: field marks and wetland habitat",
+        "Wood Duck: nesting and life in wooded wetlands",
+        "Northern Pintail: migration and long-distance flight",
+        "Gadwall: feeding behavior and subtle field marks",
+        "Eurasian Wigeon: grazing and seasonal movement",
+        "Northern Shoveler: how its bill helps it feed",
+        "Pekin Duck: domestication, care, and breed characteristics",
+        "Muscovy Duck: identifying its distinctive features",
+        "Mandarin Duck: plumage, habitat, and courtship display",
+        "Indian Runner Duck: upright posture and active behavior",
+        "Khaki Campbell Duck: breed history and egg-laying traits",
+        "Cayuga Duck: dark plumage and domestic breed history",
+        "Rouen Duck: domestic breed history and identification",
+        "Call Duck: the history of this small domestic breed",
+        "Swedish Blue Duck: plumage and heritage breed history",
+        "Aylesbury Duck: the history of this English domestic breed",
+        "Crested Duck: the crest and responsible breed care",
+        "Silver Appleyard Duck: plumage and domestic breed history",
+        "Welsh Harlequin Duck: plumage and domestic breed history",
+        "East Indie Duck: dark plumage and breed history",
+        "American Black Duck: habitat and identification",
+        "Canvasback: diving behavior and wetland habitat",
+        "Redhead Duck: seasonal plumage and diving behavior",
+        "Ring-necked Duck: field marks and diving behavior",
+        "Common Eider: coastal habitat and down feathers",
+        "Long-tailed Duck: seasonal plumage and diving behavior",
+        "Bufflehead: diving behavior and compact size",
+        "Common Goldeneye: diving behavior and nesting habitat",
+        "Harlequin Duck: fast-flowing water habitat",
+        "Ruddy Duck: courtship display and wetland habitat",
     ],
     "geese": [
-        "Canada goose: family groups and seasonal movement",
-        "Snow goose: migration in large flocks",
-        "Greylag goose: calls and social behavior",
-        "Brant goose: a coastal migrant",
+        "Canada Goose: family groups and seasonal movement",
+        "Greylag Goose: calls, behavior, and habitat",
+        "Snow Goose: migration and seasonal plumage",
+        "Ross's Goose: identification and migration",
+        "Barnacle Goose: nesting habitat and migration",
+        "Brant Goose: coastal habitat and seasonal movement",
+        "Cackling Goose: identification and migration",
+        "Greater White-fronted Goose: field marks and migration",
+        "Pink-footed Goose: migration and winter habitat",
+        "Bean Goose: identification and seasonal movement",
+        "Emperor Goose: coastal habitat and plumage",
+        "Swan Goose: identification and domestication",
+        "Egyptian Goose: habitat and distinctive markings",
+        "Chinese Goose: domestic breed history and care",
+        "African Goose: domestic breed history and care",
+        "Embden Goose: domestic breed characteristics and care",
+        "Toulouse Goose: domestic breed history and care",
+        "Pilgrim Goose: domestic breed history and characteristics",
+        "Sebastopol Goose: curled feathers and breed care",
+        "Pomeranian Goose: domestic breed history and care",
+        "Roman Goose: domestic breed history and characteristics",
+        "Steinbacher Goose: domestic breed history and care",
+        "Shetland Goose: heritage breed history and care",
+        "American Buff Goose: domestic breed history and care",
+        "Kholmogory Goose: domestic breed history and characteristics",
     ],
     "doves": [
-        "Mourning dove: recognizing its soft call",
-        "Rock dove: how pigeons adapt to city life",
-        "Eurasian collared dove: identifying its neck marking",
-        "White-winged dove: field marks and feeding habits",
-    ],
-    "starlings": [
-        "European starling: how its plumage shifts with the seasons",
-        "European starling: how flock murmurations move together",
-        "European starling: its talent for copying sounds",
-        "European starling: finding food in a changing landscape",
-    ],
-    "forest_birds": [
-        "Great horned owl: listening and hunting after dark",
-        "Barred owl: recognizing its distinctive call",
-        "Pileated woodpecker: how it searches tree trunks for food",
-        "Northern cardinal: bright plumage and clear song",
-        "American robin: finding food on the forest floor",
-        "Blue jay: calls, feathers, and forest life",
-        "Black-capped chickadee: surviving cold forest winters",
+        "Mourning Dove: recognizing its call and seasonal behavior",
+        "Eurasian Collared Dove: identification and urban habitat",
+        "Spotted Dove: field marks and feeding behavior",
+        "Diamond Dove: size, plumage, and habitat",
+        "Ring-necked Dove: identifying its neck marking",
+        "Rock Dove: adaptation to cities and varied habitats",
+        "White-winged Dove: field marks and feeding behavior",
+        "White-tipped Dove: forest habitat and identification",
+        "Inca Dove: scale-like plumage and dry habitat",
+        "Common Ground Dove: small size and ground-feeding behavior",
+        "Zebra Dove: barred plumage and familiar call",
+        "Laughing Dove: call, habitat, and behavior",
+        "African Collared Dove: identification and habitat",
+        "Red-eyed Dove: call and woodland habitat",
+        "Namaqua Dove: desert habitat and distinctive shape",
+        "European Turtle Dove: migration and conservation",
+        "Oriental Turtle Dove: identification and seasonal movement",
+        "Emerald Dove: forest habitat and green plumage",
+        "Pink-necked Green Pigeon: fruit diet and forest habitat",
+        "Nicobar Pigeon: plumage and island habitat",
+        "Victoria Crowned Pigeon: size, crest, and forest habitat",
+        "Wonga Pigeon: forest floor behavior and identification",
+        "Bar-shouldered Dove: field marks and woodland habitat",
+        "Brown Cuckoo-Dove: long tail and forest habitat",
     ],
 }
 
-ORDER = ["duck_species"] * 5 + ["geese", "doves", "starlings", "forest_birds"]
+ORDER = ["ducks"] * 5 + ["geese", "doves"]
+
+
+def _species(topic: str) -> str:
+    return topic.split(":", 1)[0].strip().casefold()
 
 
 def _load():
@@ -58,9 +116,11 @@ def pick_topic(override: str | None = None):
         return "custom", override
     h = _load()
     cat = ORDER[h["day"] % len(ORDER)]
-    pool = [t for t in TOPICS[cat] if t not in h["used"]]
+    used = {_species(t) for t in h["used"]}
+    pool = [t for t in TOPICS[cat] if _species(t) not in used]
     if not pool:  # everything in this category used: reset it
-        h["used"] = [u for u in h["used"] if u not in TOPICS[cat]]
+        category_species = {_species(t) for t in TOPICS[cat]}
+        h["used"] = [u for u in h["used"] if _species(u) not in category_species]
         pool = TOPICS[cat]
     return cat, random.choice(pool)
 

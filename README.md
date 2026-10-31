@@ -1,6 +1,6 @@
 # Bird Daily Video Bot
 
-Makes one 4-6 minute vertical Urdu documentary per day about a single bird species, then posts it to your Facebook Page. Ducks are selected more often than other bird groups.
+Makes one 2-3 minute vertical Urdu documentary per day about one duck, goose, or dove species, then posts it to your Facebook Page. Ducks are selected five times as often as geese or doves.
 
 **Pipeline:** pick one bird → write a documentary script (Claude or Urdu fallback) → voiceover (edge-tts, free) → download up to 12 clips of that bird (Pixabay) → assemble with ffmpeg (1080x1920, no on-video captions) → upload to Facebook Page.
 
@@ -35,7 +35,7 @@ python main.py --dry-run       # builds output/<title>.mp4, does NOT post
 3. The workflow in `.github/workflows/daily.yml` runs daily (edit the cron line to change the time) and you can also trigger it manually from the Actions tab.
 
 ## 4. Customize
-- **Topics:** edit `topics.py`. Rotation stays within ducks, geese, doves, starlings, and forest birds, and avoids repeats.
+- **Topics:** edit `topics.py`. Rotation favors ducks, includes geese and doves, and avoids repeating a species until that group cycles.
 - **Voice:** the default is Pakistani Urdu (`ur-PK-AsadNeural`). Set `TTS_VOICE` to another Urdu voice if preferred (run `edge-tts --list-voices`).
 - **Length / style:** edit the documentary prompt in `script_gen.py`. Adding `ANTHROPIC_API_KEY` enables longer, species-focused scripts; without it, the bot uses a general Urdu bird-documentary fallback.
 
