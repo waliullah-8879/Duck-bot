@@ -6,6 +6,17 @@ import re
 import requests
 
 MODEL = os.getenv("CLAUDE_MODEL", "claude-haiku-5-5")
+SPECIES_SEARCH_ALIASES = {
+    "common pochard": ["pochard duck", "Aythya ferina"],
+    "mallard duck": ["mallard", "Anas platyrhynchos"],
+    "green-winged teal": ["green winged teal duck", "Anas crecca"],
+    "wood duck": ["Aix sponsa", "wood duck bird"],
+    "northern pintail": ["pintail duck", "Anas acuta"],
+    "gadwall": ["gadwall duck", "Mareca strepera"],
+    "eurasian wigeon": ["wigeon duck", "Mareca penelope"],
+    "northern shoveler": ["shoveler duck", "Spatula clypeata"],
+    "common goldeneye": ["goldeneye duck", "Bucephala clangula"],
+}
 
 PROMPT = """You write a 2-3 minute Urdu documentary for a vertical Facebook video.
 
@@ -51,7 +62,9 @@ URDU_BIRD_NAMES = {
 
 def _bird_search_terms(topic: str) -> list[str]:
     subject = topic.split(":", 1)[0].strip()
-    return [subject, f"{subject} in habitat", f"{subject} flying", f"{subject} feeding", f"{subject} close up"]
+    aliases = SPECIES_SEARCH_ALIASES.get(subject.casefold(), [])
+    candidates = [subject, *aliases, f"{subject} bird", f"{subject} in habitat", f"{subject} feeding"]
+    return list(dict.fromkeys(candidates))[:5]
 
 
 def _urdu_species_name(name: str) -> str:

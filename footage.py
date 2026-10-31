@@ -11,8 +11,20 @@ import requests
 API = "https://pixabay.com/api/videos/"
 CACHE_DIR = Path(__file__).parent / ".cache" / "pixabay"
 CACHE_TTL = 24 * 60 * 60
+CACHE_VERSION = 2
 MIN_SPECIES_CLIPS = 4
 GENERIC_SPECIES_WORDS = {"duck", "goose", "dove", "pigeon"}
+SCIENTIFIC_NAME_ALIASES = {
+    "common pochard": {"aythya ferina"},
+    "mallard duck": {"anas platyrhynchos"},
+    "green winged teal": {"anas crecca"},
+    "wood duck": {"aix sponsa"},
+    "northern pintail": {"anas acuta"},
+    "gadwall": {"mareca strepera"},
+    "eurasian wigeon": {"mareca penelope"},
+    "northern shoveler": {"spatula clypeata"},
+    "common goldeneye": {"bucephala clangula"},
+}
 
 
 def _best_file(hit: dict):
@@ -35,6 +47,7 @@ def _matches_species(hit: dict, species: str) -> bool:
     normalized_tags = f" {_normalize_words(str(tags))} "
     normalized_species = _normalize_words(species)
     aliases = {normalized_species}
+    aliases.update(SCIENTIFIC_NAME_ALIASES.get(normalized_species, set()))
 
     words = normalized_species.split()
     if words and words[-1] in GENERIC_SPECIES_WORDS:
@@ -69,7 +82,8 @@ def _download_clip(url: str, dest: Path, attempts: int = 3) -> bool:
 
 
 def _search_videos(term: str, key: str) -> dict:
-    cache_name = hashlib.sha256(term.casefold().encode("utf-8")).hexdigest() + ".json"
+    cache_key = f"v{CACHE_VERSION}:{term.casefold()}:animals:100:safe"
+    cache_name = hashlib.sha256(cache_key.encode("utf-8")).hexdigest() + ".json"
     cache_file = CACHE_DIR / cache_name
     try:
         if time.time() - cache_file.stat().st_mtime < CACHE_TTL:
@@ -80,7 +94,7 @@ def _search_videos(term: str, key: str) -> dict:
     try:
         response = requests.get(
             API,
-            params={"key": key, "q": term, "category": "animals", "per_page": 20, "safesearch": "true"},
+            params={"key": key, "q": term, "category": "animals", "per_page": 100, "safesearch": "true"},
             timeout=30,
         )
         response.raise_for_status()
