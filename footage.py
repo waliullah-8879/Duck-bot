@@ -23,6 +23,7 @@ SCIENTIFIC_NAME_ALIASES = {
     "gadwall": {"mareca strepera"},
     "eurasian wigeon": {"mareca penelope"},
     "northern shoveler": {"spatula clypeata"},
+    "common eider": {"somateria mollissima"},
     "common goldeneye": {"bucephala clangula"},
 }
 

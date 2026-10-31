@@ -15,6 +15,7 @@ SPECIES_SEARCH_ALIASES = {
     "gadwall": ["gadwall duck", "Mareca strepera"],
     "eurasian wigeon": ["wigeon duck", "Mareca penelope"],
     "northern shoveler": ["shoveler duck", "Spatula clypeata"],
+    "common eider": ["eider duck", "eider", "Somateria mollissima"],
     "common goldeneye": ["goldeneye duck", "Bucephala clangula"],
 }
 
