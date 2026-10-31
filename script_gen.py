@@ -66,7 +66,7 @@ URDU_BIRD_NAMES = {
 }
 
 
-def _bird_search_terms(topic: str) -> list[str]:
+def bird_search_terms(topic: str) -> list[str]:
     subject = topic.split(":", 1)[0].strip()
     aliases = SPECIES_SEARCH_ALIASES.get(subject.casefold(), [])
     candidates = [subject, *aliases, f"{subject} bird", f"{subject} in habitat", f"{subject} feeding"]
@@ -100,7 +100,7 @@ def _fallback(topic: str) -> dict:
     return {
         "title": f"{bird} کے بارے میں",
         "narration": narration,
-        "search_terms": _bird_search_terms(topic),
+        "search_terms": bird_search_terms(topic),
         "hashtags": ["پرندے", "فطرت", "قدرتی_ماحول", "دستاویزی_فلم", "پرندوں_کا_مشاہدہ", "اردو"],
     }
 
@@ -135,7 +135,7 @@ def generate_script(topic: str) -> dict:
         word_count = len(data["narration"].split())
         if not 240 <= word_count <= 380:
             raise ValueError("Claude returned narration outside the 2-3 minute length range.")
-        data["search_terms"] = _bird_search_terms(topic)
+        data["search_terms"] = bird_search_terms(topic)
         return data
     except Exception as e:  # network / parse problems should not kill the daily run
         print(f"[script] Claude call failed ({e}); using fallback template.")

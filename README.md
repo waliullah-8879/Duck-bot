@@ -2,7 +2,7 @@
 
 Makes one 2-3 minute vertical Urdu documentary per day about one duck, goose, or dove species, then posts it to your Facebook Page. Ducks are selected five times as often as geese or doves.
 
-**Pipeline:** pick one species → write a documentary script (Claude or Urdu fallback) → voiceover (edge-tts, free) → download up to 12 Pixabay clips whose tags match that species → assemble with ffmpeg (1080x1920, no on-video captions) → upload to Facebook Page. The run stops if Pixabay returns no species-matched footage; it never substitutes unrelated birds.
+**Pipeline:** pick one species → verify at least four tagged Pixabay clips → write that species' documentary script (Claude or Urdu fallback) → voiceover (edge-tts, free) → assemble with ffmpeg (1080x1920, no on-video captions) → upload to Facebook Page. Scheduled runs skip up to five species with insufficient footage; they never substitute unrelated birds. An explicit `--topic` run stays on that species and fails if matching footage is unavailable.
 
 ## 1. Setup (local test)
 

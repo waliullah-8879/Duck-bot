@@ -28,6 +28,10 @@ SCIENTIFIC_NAME_ALIASES = {
 }
 
 
+class NoMatchingFootageError(RuntimeError):
+    pass
+
+
 def _best_file(hit: dict):
     videos = hit.get("videos") or {}
     for variant in ("medium", "small", "tiny", "large"):
@@ -142,7 +146,7 @@ def fetch_clips(terms: list[str], workdir: Path, species: str, want: int = 12) -
                     clips.append(dest)
     minimum = min(MIN_SPECIES_CLIPS, want)
     if len(clips) < minimum:
-        raise RuntimeError(
+        raise NoMatchingFootageError(
             f"Pixabay returned only {len(clips)} clips tagged for {species!r}; "
             f"at least {minimum} are required. No unrelated footage was used."
         )

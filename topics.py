@@ -110,23 +110,34 @@ def _load():
     return {"used": [], "day": 0}
 
 
-def pick_topic(override: str | None = None):
-    """Return (category, topic). Rotates categories, avoids repeats."""
+def pick_topic(override: str | None = None, exclude_species=()):
+    """Return an unused topic, optionally excluding species unavailable this run."""
     if override:
         return "custom", override
     h = _load()
-    cat = ORDER[h["day"] % len(ORDER)]
     used = {_species(t) for t in h["used"]}
-    pool = [t for t in TOPICS[cat] if _species(t) not in used]
-    if not pool:  # everything in this category used: reset it
-        category_species = {_species(t) for t in TOPICS[cat]}
-        h["used"] = [u for u in h["used"] if _species(u) not in category_species]
-        pool = TOPICS[cat]
-    return cat, random.choice(pool)
+    excluded = {_species(t) for t in exclude_species}
+
+    for offset in range(len(ORDER)):
+        cat = ORDER[(h["day"] + offset) % len(ORDER)]
+        available = [t for t in TOPICS[cat] if _species(t) not in excluded]
+        pool = [t for t in available if _species(t) not in used]
+        if pool:
+            return cat, random.choice(pool)
+        if available:
+            available_species = {_species(t) for t in available}
+            h["used"] = [t for t in h["used"] if _species(t) not in available_species]
+            return cat, random.choice(available)
+
+    raise RuntimeError("No untried species remain in the topic pool.")
 
 
-def mark_used(topic: str):
+def mark_used(topic: str, also_used=()):
     h = _load()
-    h["used"].append(topic)
+    used_species = {_species(item) for item in h["used"]}
+    for item in (*also_used, topic):
+        if _species(item) not in used_species:
+            h["used"].append(item)
+            used_species.add(_species(item))
     h["day"] += 1
     HISTORY.write_text(json.dumps(h, indent=2))

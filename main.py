@@ -16,8 +16,8 @@ load_dotenv()
 
 from assemble import build_video  # noqa: E402
 from facebook import post_video  # noqa: E402
-from footage import fetch_clips  # noqa: E402
-from script_gen import generate_script  # noqa: E402
+from footage import NoMatchingFootageError, fetch_clips  # noqa: E402
+from script_gen import bird_search_terms, generate_script  # noqa: E402
 from topics import mark_used, pick_topic  # noqa: E402
 from tts import synthesize  # noqa: E402
 
@@ -31,21 +31,37 @@ def main():
     args = ap.parse_args()
 
     OUT_DIR.mkdir(exist_ok=True)
-    category, topic = pick_topic(args.topic)
-    print(f"[topic] ({category}) {topic}")
-
-    script = generate_script(topic)
-    print(f"[script] {script['title']}")
-
     work = Path(tempfile.mkdtemp(prefix="duckbot_"))
+    skipped_topics = []
     try:
-        audio = Path(synthesize(script["narration"], str(work / "voice.mp3")))
-        species = topic.split(":", 1)[0].strip()
-        clips = fetch_clips(script["search_terms"], work, species)
-        slug = "".join(c if c.isalnum() else "_" for c in script["title"])[:40]
-        out = OUT_DIR / f"{slug}.mp4"
-        build_video(clips, audio, work, out)
-        print(f"[video] {out}")
+        attempts = 1 if args.topic else 5
+        for attempt in range(attempts):
+            category, topic = pick_topic(args.topic, exclude_species=skipped_topics)
+            print(f"[topic] ({category}) {topic}")
+            attempt_work = work / f"attempt_{attempt:02d}"
+            attempt_work.mkdir()
+            species = topic.split(":", 1)[0].strip()
+
+            try:
+                clips = fetch_clips(bird_search_terms(topic), attempt_work, species)
+            except NoMatchingFootageError as exc:
+                if args.topic:
+                    raise
+                print(f"[topic] {exc}; trying another species.")
+                skipped_topics.append(topic)
+                shutil.rmtree(attempt_work, ignore_errors=True)
+                continue
+
+            script = generate_script(topic)
+            print(f"[script] {script['title']}")
+            audio = Path(synthesize(script["narration"], str(attempt_work / "voice.mp3")))
+            slug = "".join(c if c.isalnum() else "_" for c in script["title"])[:40]
+            out = OUT_DIR / f"{slug}.mp4"
+            build_video(clips, audio, attempt_work, out)
+            print(f"[video] {out}")
+            break
+        else:
+            raise RuntimeError("No species in the next five topics has enough tagged Pixabay footage; no video was posted.")
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
@@ -58,7 +74,7 @@ def main():
     result = post_video(str(out), script["title"], desc)
     print(f"[facebook] Posted: {result}")
     if not args.topic:
-        mark_used(topic)
+        mark_used(topic, also_used=skipped_topics)
 
 
 if __name__ == "__main__":
