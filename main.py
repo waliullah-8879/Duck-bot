@@ -22,6 +22,7 @@ from topics import mark_used, pick_topic  # noqa: E402
 from tts import synthesize  # noqa: E402
 
 OUT_DIR = Path(__file__).parent / "output"
+SCHEDULED_TOPIC_ATTEMPTS = 10
 
 
 def main():
@@ -34,7 +35,7 @@ def main():
     work = Path(tempfile.mkdtemp(prefix="duckbot_"))
     skipped_topics = []
     try:
-        attempts = 1 if args.topic else 5
+        attempts = 1 if args.topic else SCHEDULED_TOPIC_ATTEMPTS
         for attempt in range(attempts):
             category, topic = pick_topic(args.topic, exclude_species=skipped_topics)
             print(f"[topic] ({category}) {topic}")
@@ -61,7 +62,9 @@ def main():
             print(f"[video] {out}")
             break
         else:
-            raise RuntimeError("No species in the next five topics has enough tagged Pixabay footage; no video was posted.")
+            raise RuntimeError(
+                f"None of the next {SCHEDULED_TOPIC_ATTEMPTS} topics has enough tagged Pixabay footage; no video was posted."
+            )
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
