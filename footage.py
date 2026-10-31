@@ -12,7 +12,7 @@ API = "https://pixabay.com/api/videos/"
 CACHE_DIR = Path(__file__).parent / ".cache" / "pixabay"
 CACHE_TTL = 24 * 60 * 60
 CACHE_VERSION = 3
-MIN_SPECIES_CLIPS = 4
+MIN_SPECIES_CLIPS = 3
 GENERIC_SPECIES_WORDS = {"duck", "goose", "dove", "pigeon"}
 SCIENTIFIC_NAME_ALIASES = {
     "common pochard": {"aythya ferina"},
