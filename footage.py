@@ -13,16 +13,33 @@ CACHE_TTL = 24 * 60 * 60
 
 
 def _best_file(hit: dict):
-    files = [f for f in (hit.get("videos") or {}).values() if f.get("url")]
-    if not files:
-        return None
+    videos = hit.get("videos") or {}
+    for variant in ("medium", "small", "tiny", "large"):
+        video_file = videos.get(variant)
+        if video_file and video_file.get("url"):
+            return video_file
+    return None
 
-    def score(f):
-        w, h = f.get("width") or 0, f.get("height") or 0
-        target_w, target_h = (1080, 1920) if h > w else (1920, 1080)
-        return (h > w, min(w, h) >= 720, -(abs(w - target_w) + abs(h - target_h)))
 
-    return sorted(files, key=score, reverse=True)[0]
+def _download_clip(url: str, dest: Path, attempts: int = 3) -> bool:
+    for attempt in range(attempts):
+        try:
+            with requests.get(url, stream=True, timeout=(15, 120)) as response:
+                response.raise_for_status()
+                with dest.open("wb") as fh:
+                    for chunk in response.iter_content(1 << 20):
+                        if chunk:
+                            fh.write(chunk)
+            if dest.stat().st_size:
+                return True
+        except requests.RequestException:
+            pass
+
+        dest.unlink(missing_ok=True)
+        if attempt + 1 < attempts:
+            print(f"[footage] Download interrupted; retrying ({attempt + 1}/{attempts - 1}).")
+            time.sleep(2 ** attempt)
+    return False
 
 
 def _search_videos(term: str, key: str) -> dict:
@@ -70,12 +87,8 @@ def fetch_clips(terms: list[str], workdir: Path, want: int = 12) -> list[Path]:
                 continue
             seen.add(video_id)
             dest = workdir / f"clip_{len(clips):02d}.mp4"
-            with requests.get(video_file["url"], stream=True, timeout=120) as dl:
-                dl.raise_for_status()
-                with open(dest, "wb") as fh:
-                    for chunk in dl.iter_content(1 << 20):
-                        fh.write(chunk)
-            clips.append(dest)
+            if _download_clip(video_file["url"], dest):
+                clips.append(dest)
     if not clips:
         raise RuntimeError("No stock clips found. Check PIXABAY_API_KEY / search terms.")
     return clips
