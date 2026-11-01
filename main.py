@@ -37,7 +37,11 @@ def main():
     try:
         attempts = 1 if args.topic else SCHEDULED_TOPIC_ATTEMPTS
         for attempt in range(attempts):
-            category, topic = pick_topic(args.topic, exclude_species=skipped_topics)
+            category, topic = pick_topic(
+                args.topic,
+                exclude_species=skipped_topics,
+                category_offset=attempt,
+            )
             print(f"[topic] ({category}) {topic}")
             attempt_work = work / f"attempt_{attempt:02d}"
             attempt_work.mkdir()

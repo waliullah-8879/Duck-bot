@@ -110,7 +110,7 @@ def _load():
     return {"used": [], "day": 0}
 
 
-def pick_topic(override: str | None = None, exclude_species=()):
+def pick_topic(override: str | None = None, exclude_species=(), category_offset: int = 0):
     """Return an unused topic, optionally excluding species unavailable this run."""
     if override:
         return "custom", override
@@ -119,7 +119,7 @@ def pick_topic(override: str | None = None, exclude_species=()):
     excluded = {_species(t) for t in exclude_species}
 
     for offset in range(len(ORDER)):
-        cat = ORDER[(h["day"] + offset) % len(ORDER)]
+        cat = ORDER[(h["day"] + category_offset + offset) % len(ORDER)]
         available = [t for t in TOPICS[cat] if _species(t) not in excluded]
         pool = [t for t in available if _species(t) not in used]
         if pool:
