@@ -2,7 +2,7 @@
 
 Makes one 2-3 minute vertical Urdu documentary per day about one duck, goose, or dove species, then posts it to your Facebook Page. Ducks are selected five times as often as geese or doves.
 
-**Pipeline:** pick one species → verify at least three tagged Pixabay clips → write that species' documentary script (Claude or Urdu fallback) → voiceover (edge-tts, free) → assemble with ffmpeg (1080x1920, no on-video captions) → upload to Facebook Page. Scheduled runs skip up to ten species with insufficient footage; they never substitute unrelated birds. An explicit `--topic` run stays on that species and fails if matching footage is unavailable.
+**Pipeline:** pick one species → use exact-species Pixabay clips first, then related clips from the same group only if needed to reach three → write that species' documentary script (Claude or Urdu fallback) → voiceover (edge-tts, free) → assemble with ffmpeg (1080x1920, no on-video captions) → upload to Facebook Page. Duck topics may use other tagged duck/waterfowl footage as supporting shots; geese and dove topics stay within their groups. Pet footage and unrelated bird groups are rejected. Scheduled runs skip up to ten species if there is not enough related footage.
 
 ## 1. Setup (local test)
 
@@ -40,7 +40,7 @@ python main.py --dry-run       # builds output/<title>.mp4, does NOT post
 - **Length / style:** edit the documentary prompt in `script_gen.py`. Adding `ANTHROPIC_API_KEY` enables longer, species-focused scripts; without it, the bot uses a general Urdu bird-documentary fallback.
 
 ## Things to know
-- **Language and footage:** narration is in Urdu, and every downloaded clip must have tags matching the selected species. The video itself has no burned-in voiceover captions.
+- **Language and footage:** narration is in Urdu and stays focused on one species. Footage is exact-species first, with same-group B-roll only as supporting fallback. The video itself has no burned-in voiceover captions.
 - **Footage source:** Pixabay search responses are cached for 24 hours as required by its API terms, and the post description credits Pixabay.
 - **Repetitive content:** Facebook can reduce reach for fully automated, low-effort pages. Review the first videos, add your own clips/photos, and keep the facts accurate.
 - **Reels:** this uses the standard video endpoint. Facebook Reels use a separate multi-step upload API if you want to switch later.

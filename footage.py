@@ -13,6 +13,17 @@ CACHE_DIR = Path(__file__).parent / ".cache" / "pixabay"
 CACHE_TTL = 24 * 60 * 60
 CACHE_VERSION = 3
 MIN_SPECIES_CLIPS = 3
+GROUP_SEARCH_TERMS = {
+    "ducks": ["wild ducks waterfowl", "ducks swimming pond", "ducks flying lake"],
+    "geese": ["wild geese waterfowl", "geese flying flock", "geese swimming lake"],
+    "doves": ["doves flying flock", "wild pigeons perched", "doves feeding ground"],
+}
+GROUP_TAGS = {
+    "ducks": {"duck", "ducks"},
+    "geese": {"goose", "geese"},
+    "doves": {"dove", "doves", "pigeon", "pigeons"},
+}
+NON_BIRD_TAGS = {"dog", "dogs", "puppy", "puppies", "cat", "cats", "kitten", "pet", "pets", "toy", "plush"}
 SCIENTIFIC_NAME_ALIASES = {
     "common pochard": {"aythya ferina", "pochard"},
     "mallard duck": {"anas platyrhynchos", "mallard"},
@@ -53,6 +64,19 @@ def _matches_species(hit: dict, species: str) -> bool:
     aliases = {normalized_species}
     aliases.update(SCIENTIFIC_NAME_ALIASES.get(normalized_species, set()))
     return any(alias and f" {alias} " in normalized_tags for alias in aliases)
+
+
+def _matches_group(hit: dict, group: str) -> bool:
+    allowed_tags = GROUP_TAGS.get(group)
+    if not allowed_tags:
+        return False
+    tags = hit.get("tags", "")
+    if isinstance(tags, list):
+        tags = ",".join(str(tag) for tag in tags)
+    normalized_tags = f" {_normalize_words(str(tags))} "
+    if any(f" {tag} " in normalized_tags for tag in NON_BIRD_TAGS):
+        return False
+    return any(f" {tag} " in normalized_tags for tag in allowed_tags)
 
 
 def _download_clip(url: str, dest: Path, attempts: int = 3) -> bool:
@@ -110,34 +134,46 @@ def _search_videos(term: str, key: str, order: str) -> dict:
     return data
 
 
-def fetch_clips(terms: list[str], workdir: Path, species: str, want: int = 12) -> list[Path]:
+def fetch_clips(terms: list[str], workdir: Path, species: str, group: str = "", want: int = 12) -> list[Path]:
     key = os.getenv("PIXABAY_API_KEY", "").strip()
     if not key:
         raise RuntimeError("Set PIXABAY_API_KEY in your .env file before downloading footage.")
 
     clips: list[Path] = []
     seen: set[int] = set()
-    for order in ("latest", "popular"):
-        for term in terms:
-            if len(clips) >= want:
-                break
-            for hit in _search_videos(term, key, order).get("hits", []):
-                video_id = hit.get("id")
-                if video_id is None or video_id in seen or len(clips) >= want:
-                    continue
-                if not _matches_species(hit, species):
-                    continue
-                video_file = _best_file(hit)
-                if not video_file:
-                    continue
-                seen.add(video_id)
-                dest = workdir / f"clip_{len(clips):02d}.mp4"
-                if _download_clip(video_file["url"], dest):
-                    clips.append(dest)
+
+    def collect(search_terms: list[str], matcher) -> None:
+        for order in ("latest", "popular"):
+            for term in search_terms:
+                if len(clips) >= want:
+                    return
+                for hit in _search_videos(term, key, order).get("hits", []):
+                    video_id = hit.get("id")
+                    if video_id is None or video_id in seen or len(clips) >= want:
+                        continue
+                    if not matcher(hit):
+                        continue
+                    video_file = _best_file(hit)
+                    if not video_file:
+                        continue
+                    seen.add(video_id)
+                    dest = workdir / f"clip_{len(clips):02d}.mp4"
+                    if _download_clip(video_file["url"], dest):
+                        clips.append(dest)
+
+    collect(terms, lambda hit: _matches_species(hit, species))
+    exact_count = len(clips)
     minimum = min(MIN_SPECIES_CLIPS, want)
+    if len(clips) < minimum and group in GROUP_SEARCH_TERMS:
+        collect(GROUP_SEARCH_TERMS[group], lambda hit: _matches_group(hit, group))
+
     if len(clips) < minimum:
+        related_count = len(clips) - exact_count
         raise NoMatchingFootageError(
-            f"Pixabay returned only {len(clips)} clips tagged for {species!r}; "
-            f"at least {minimum} are required. No unrelated footage was used."
+            f"Pixabay returned {exact_count} exact and {related_count} related {group or 'same-species'} clips "
+            f"for {species!r}; at least {minimum} are required. No unrelated pets or bird groups were used."
         )
+    related_count = len(clips) - exact_count
+    if related_count:
+        print(f"[footage] Using {related_count} related {group} clips and {exact_count} exact {species} clips.")
     return clips

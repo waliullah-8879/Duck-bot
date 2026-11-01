@@ -48,7 +48,7 @@ def main():
             species = topic.split(":", 1)[0].strip()
 
             try:
-                clips = fetch_clips(bird_search_terms(topic), attempt_work, species)
+                clips = fetch_clips(bird_search_terms(topic), attempt_work, species, category)
             except NoMatchingFootageError as exc:
                 if args.topic:
                     raise
