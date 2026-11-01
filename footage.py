@@ -13,18 +13,17 @@ CACHE_DIR = Path(__file__).parent / ".cache" / "pixabay"
 CACHE_TTL = 24 * 60 * 60
 CACHE_VERSION = 3
 MIN_SPECIES_CLIPS = 3
-GENERIC_SPECIES_WORDS = {"duck", "goose", "dove", "pigeon"}
 SCIENTIFIC_NAME_ALIASES = {
-    "common pochard": {"aythya ferina"},
-    "mallard duck": {"anas platyrhynchos"},
+    "common pochard": {"aythya ferina", "pochard"},
+    "mallard duck": {"anas platyrhynchos", "mallard"},
     "green winged teal": {"anas crecca"},
     "wood duck": {"aix sponsa"},
-    "northern pintail": {"anas acuta"},
+    "northern pintail": {"anas acuta", "pintail"},
     "gadwall": {"mareca strepera"},
     "eurasian wigeon": {"mareca penelope"},
     "northern shoveler": {"spatula clypeata"},
     "common eider": {"somateria mollissima"},
-    "common goldeneye": {"bucephala clangula"},
+    "common goldeneye": {"bucephala clangula", "goldeneye"},
 }
 
 
@@ -53,15 +52,6 @@ def _matches_species(hit: dict, species: str) -> bool:
     normalized_species = _normalize_words(species)
     aliases = {normalized_species}
     aliases.update(SCIENTIFIC_NAME_ALIASES.get(normalized_species, set()))
-
-    words = normalized_species.split()
-    if words and words[-1] in GENERIC_SPECIES_WORDS:
-        core = " ".join(words[:-1])
-        if len(core.split()) > 1 or len(core) >= 5:
-            aliases.add(core)
-    elif words and len(words[-1]) >= 5:
-        aliases.add(words[-1])
-
     return any(alias and f" {alias} " in normalized_tags for alias in aliases)
 
 
