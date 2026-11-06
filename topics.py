@@ -1,103 +1,78 @@
-"""Topic pool + simple no-repeat rotation."""
+"""Topic pool + simple no-repeat rotation for migratory birds."""
 import json
-import random
 from pathlib import Path
+import random
 
 HISTORY = Path(__file__).parent / "history.json"
 
 TOPICS = {
     "ducks": [
-        "Common Pochard: diving behavior and seasonal plumage",
-        "Mallard Duck: identifying its changing seasonal plumage",
-        "Green-winged Teal: feeding behavior in shallow wetlands",
-        "Blue-winged Teal: migration and seasonal movement",
-        "Eurasian Teal: field marks and wetland habitat",
-        "Wood Duck: nesting and life in wooded wetlands",
-        "Northern Pintail: migration and long-distance flight",
-        "Gadwall: feeding behavior and subtle field marks",
-        "Eurasian Wigeon: grazing and seasonal movement",
-        "Northern Shoveler: how its bill helps it feed",
-        "Pekin Duck: domestication, care, and breed characteristics",
-        "Muscovy Duck: identifying its distinctive features",
-        "Mandarin Duck: plumage, habitat, and courtship display",
-        "Indian Runner Duck: upright posture and active behavior",
-        "Khaki Campbell Duck: breed history and egg-laying traits",
-        "Cayuga Duck: dark plumage and domestic breed history",
-        "Rouen Duck: domestic breed history and identification",
-        "Call Duck: the history of this small domestic breed",
-        "Swedish Blue Duck: plumage and heritage breed history",
-        "Aylesbury Duck: the history of this English domestic breed",
-        "Crested Duck: the crest and responsible breed care",
-        "Silver Appleyard Duck: plumage and domestic breed history",
-        "Welsh Harlequin Duck: plumage and domestic breed history",
-        "East Indie Duck: dark plumage and breed history",
-        "American Black Duck: habitat and identification",
-        "Canvasback: diving behavior and wetland habitat",
-        "Redhead Duck: seasonal plumage and diving behavior",
-        "Ring-necked Duck: field marks and diving behavior",
-        "Common Eider: coastal habitat and down feathers",
-        "Long-tailed Duck: seasonal plumage and diving behavior",
-        "Bufflehead: diving behavior and compact size",
-        "Common Goldeneye: diving behavior and nesting habitat",
-        "Harlequin Duck: fast-flowing water habitat",
-        "Ruddy Duck: courtship display and wetland habitat",
+        "Mallard: seasonal migration and wetland plumage",
+        "Northern Pintail: long-distance flight and aerodynamic shape",
+        "Northern Shoveler: specialized bill and surface feeding",
+        "Common Teal: rapid flight and shallow wetland habitat",
+        "Eurasian Wigeon: grazing habits and distinctive whistle call",
+        "Gadwall: subtle plumage and dabbling behavior",
+        "Common Pochard: diving behavior and winter flocking",
+        "Red-crested Pochard: striking plumage and diving depth",
+        "Tufted Duck: underwater foraging and distinctive crest",
+        "Garganey: nocturnal migration and breeding plumage",
+        "Ruddy Shelduck: alert behavior and inland water habitat",
+        "Common Shelduck: coastal mudflats and distinctive markings",
     ],
     "geese": [
-        "Canada Goose: family groups and seasonal movement",
-        "Greylag Goose: calls, behavior, and habitat",
-        "Snow Goose: migration and seasonal plumage",
-        "Ross's Goose: identification and migration",
-        "Barnacle Goose: nesting habitat and migration",
-        "Brant Goose: coastal habitat and seasonal movement",
-        "Cackling Goose: identification and migration",
-        "Greater White-fronted Goose: field marks and migration",
-        "Pink-footed Goose: migration and winter habitat",
-        "Bean Goose: identification and seasonal movement",
-        "Emperor Goose: coastal habitat and plumage",
-        "Swan Goose: identification and domestication",
-        "Egyptian Goose: habitat and distinctive markings",
-        "Chinese Goose: domestic breed history and care",
-        "African Goose: domestic breed history and care",
-        "Embden Goose: domestic breed characteristics and care",
-        "Toulouse Goose: domestic breed history and care",
-        "Pilgrim Goose: domestic breed history and characteristics",
-        "Sebastopol Goose: curled feathers and breed care",
-        "Pomeranian Goose: domestic breed history and care",
-        "Roman Goose: domestic breed history and characteristics",
-        "Steinbacher Goose: domestic breed history and care",
-        "Shetland Goose: heritage breed history and care",
-        "American Buff Goose: domestic breed history and care",
-        "Kholmogory Goose: domestic breed history and characteristics",
+        "Bar-headed Goose: high-altitude Himalayan migration",
+        "Greylag Goose: flock leadership and wetland grazing",
+        "Greater White-fronted Goose: family bonds and tundra origins",
     ],
-    "doves": [
-        "Mourning Dove: recognizing its call and seasonal behavior",
-        "Eurasian Collared Dove: identification and urban habitat",
-        "Spotted Dove: field marks and feeding behavior",
-        "Diamond Dove: size, plumage, and habitat",
-        "Ring-necked Dove: identifying its neck marking",
-        "Rock Dove: adaptation to cities and varied habitats",
-        "White-winged Dove: field marks and feeding behavior",
-        "White-tipped Dove: forest habitat and identification",
-        "Inca Dove: scale-like plumage and dry habitat",
-        "Common Ground Dove: small size and ground-feeding behavior",
-        "Zebra Dove: barred plumage and familiar call",
-        "Laughing Dove: call, habitat, and behavior",
-        "African Collared Dove: identification and habitat",
-        "Red-eyed Dove: call and woodland habitat",
-        "Namaqua Dove: desert habitat and distinctive shape",
-        "European Turtle Dove: migration and conservation",
-        "Oriental Turtle Dove: identification and seasonal movement",
-        "Emerald Dove: forest habitat and green plumage",
-        "Pink-necked Green Pigeon: fruit diet and forest habitat",
-        "Nicobar Pigeon: plumage and island habitat",
-        "Victoria Crowned Pigeon: size, crest, and forest habitat",
-        "Wonga Pigeon: forest floor behavior and identification",
-        "Bar-shouldered Dove: field marks and woodland habitat",
-        "Brown Cuckoo-Dove: long tail and forest habitat",
+    "cranes_and_bustards": [
+        "Common Crane: graceful flight and wetland stopovers",
+        "Demoiselle Crane: challenging mountain migration and courtship dance",
+        "Houbara Bustard: desert adaptation and stealthy behavior",
+    ],
+    "waterbirds": [
+        "Greater Flamingo: filter feeding in saline lagoons",
+        "Lesser Flamingo: alkaline lake ecology and flock movement",
+        "Great White Pelican: cooperative fishing and soaring flight",
+        "Dalmatian Pelican: massive wingspan and freshwater lakes",
+        "Eurasian Spoonbill: sweeping bill motion in shallow waters",
+        "Black Stork: solitary habits and quiet forest wetlands",
+        "White Stork: long-distance thermals and wetland foraging",
+    ],
+    "cormorants_and_gulls": [
+        "Black-headed Gull: agile flight and opportunistic feeding",
+        "Brown-headed Gull: high-altitude breeding and seasonal plumage",
+        "Common Cormorant: expert underwater fishing and wing drying",
+        "Great Cormorant: deep diving and coastal roosting",
+    ],
+    "shorebirds": [
+        "Eurasian Curlew: curved bill and coastal mudflat probing",
+        "Common Snipe: camouflage in marshlands and zigzag flight",
+        "Little Stint: endurance migration and rapid shoreline feeding",
+        "Green Sandpiper: solitary foraging along freshwater margins",
+        "Wood Sandpiper: marshland foraging and agile flight",
+        "Common Greenshank: alert calls and active wetland hunting",
+        "Black-tailed Godwit: deep-mud probing and long-distance flight",
+        "Kentish Plover: nesting camouflage and sandy shore running",
+    ],
+    "passerines": [
+        "Yellow Wagtail: tail pumping and grassland insect hunting",
+        "White Wagtail: urban adaptability and energetic motion",
+        "Barn Swallow: aerial insect hunting and long-distance journey",
+        "Sand Martin: riverbank nesting colonies and agile swooping",
+        "Bluethroat: skulking behavior in reeds and mimicry songs",
+        "Common Starling: synchronized murmurations and winter flocks",
+        "Common Chiffchaff: canopy insect foraging and rhythmic call",
+    ],
+    "raptors": [
+        "Osprey: aerial hovering and precision fish hunting",
     ],
 }
 
-ORDER = ["ducks"] * 5 + ["geese", "doves"]
+ORDER = [
+    "ducks", "ducks", "geese", "ducks", "cranes_and_bustards",
+    "waterbirds", "shorebirds", "cormorants_and_gulls", "passerines", "raptors",
+]
 
 
 def _species(topic: str) -> str:
@@ -106,7 +81,7 @@ def _species(topic: str) -> str:
 
 def _load():
     if HISTORY.exists():
-        return json.loads(HISTORY.read_text())
+        return json.loads(HISTORY.read_text(encoding="utf-8"))
     return {"used": [], "day": 0}
 
 
@@ -140,4 +115,4 @@ def mark_used(topic: str, also_used=()):
             h["used"].append(item)
             used_species.add(_species(item))
     h["day"] += 1
-    HISTORY.write_text(json.dumps(h, indent=2))
+    HISTORY.write_text(json.dumps(h, indent=2), encoding="utf-8")

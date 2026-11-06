@@ -16,12 +16,22 @@ MIN_SPECIES_CLIPS = 3
 GROUP_SEARCH_TERMS = {
     "ducks": ["wild ducks waterfowl", "ducks swimming pond", "ducks flying lake"],
     "geese": ["wild geese waterfowl", "geese flying flock", "geese swimming lake"],
-    "doves": ["doves flying flock", "wild pigeons perched", "doves feeding ground"],
+    "cranes_and_bustards": ["crane bird flying wetland", "cranes flock lake", "bustard bird wildlife"],
+    "waterbirds": ["flamingo flock water", "pelican swimming lake", "stork bird wetland", "spoonbill bird"],
+    "cormorants_and_gulls": ["cormorant bird water", "seagulls flying sea", "gull bird coast"],
+    "shorebirds": ["shorebird sandpiper wetland", "curlew bird mudflat", "snipe bird marsh", "plover bird beach"],
+    "passerines": ["wagtail bird nature", "swallow bird flying", "songbird branch wildlife", "starling flock"],
+    "raptors": ["osprey bird flight", "fish eagle raptor", "osprey catching fish"],
 }
 GROUP_TAGS = {
-    "ducks": {"duck", "ducks"},
+    "ducks": {"duck", "ducks", "waterfowl", "shelduck", "teal", "pochard", "wigeon", "mallard"},
     "geese": {"goose", "geese"},
-    "doves": {"dove", "doves", "pigeon", "pigeons"},
+    "cranes_and_bustards": {"crane", "cranes", "bustard"},
+    "waterbirds": {"flamingo", "flamingos", "pelican", "pelicans", "stork", "storks", "spoonbill"},
+    "cormorants_and_gulls": {"cormorant", "cormorants", "gull", "gulls", "seagull", "seagulls"},
+    "shorebirds": {"sandpiper", "curlew", "snipe", "plover", "godwit", "stint", "greenshank", "shorebird", "wader"},
+    "passerines": {"wagtail", "swallow", "martin", "starling", "bluethroat", "chiffchaff", "songbird"},
+    "raptors": {"osprey", "raptor", "eagle", "hawk"},
 }
 EXCLUDED_TAGS = {
     # Animation, 3D CGI, renders, cartoons
@@ -41,16 +51,59 @@ EXCLUDED_TAGS = {
     "recipe", "roast", "cooked", "cooking", "meat", "dish",
 }
 SCIENTIFIC_NAME_ALIASES = {
+    # Ducks & Waterfowl
+    "mallard": {"anas platyrhynchos", "mallard duck"},
+    "northern pintail": {"anas acuta", "pintail", "pintail duck"},
+    "northern shoveler": {"spatula clypeata", "shoveler", "shoveler duck", "anas clypeata"},
+    "common teal": {"anas crecca", "eurasian teal", "teal", "green winged teal"},
+    "eurasian wigeon": {"mareca penelope", "wigeon", "anas penelope"},
+    "gadwall": {"mareca strepera", "anas strepera"},
     "common pochard": {"aythya ferina", "pochard"},
-    "mallard duck": {"anas platyrhynchos", "mallard"},
-    "green winged teal": {"anas crecca"},
-    "wood duck": {"aix sponsa"},
-    "northern pintail": {"anas acuta", "pintail"},
-    "gadwall": {"mareca strepera"},
-    "eurasian wigeon": {"mareca penelope"},
-    "northern shoveler": {"spatula clypeata"},
-    "common eider": {"somateria mollissima"},
-    "common goldeneye": {"bucephala clangula", "goldeneye"},
+    "red-crested pochard": {"netta rufina", "red crested pochard"},
+    "tufted duck": {"aythya fuligula"},
+    "garganey": {"spatula querquedula", "anas querquedula"},
+    "ruddy shelduck": {"tadorna ferruginea", "brahminy duck"},
+    "common shelduck": {"tadorna tadorna", "shelduck"},
+    # Geese
+    "bar-headed goose": {"anser indicus", "bar headed goose"},
+    "greylag goose": {"anser anser", "graylag goose"},
+    "greater white-fronted goose": {"anser albifrons", "white-fronted goose"},
+    # Cranes & Bustards
+    "common crane": {"grus grus", "eurasian crane"},
+    "demoiselle crane": {"anthropoides virgo", "grus virgo"},
+    "houbara bustard": {"chlamydotis macqueenii", "chlamydotis undulata", "asian houbara", "bustard"},
+    # Waterbirds
+    "greater flamingo": {"phoenicopterus roseus", "flamingo"},
+    "lesser flamingo": {"phoeniconaias minor", "flamingo"},
+    "great white pelican": {"pelecanus onocrotalus", "white pelican", "pelican"},
+    "dalmatian pelican": {"pelecanus crispus", "pelican"},
+    "eurasian spoonbill": {"platalea leucorodia", "spoonbill"},
+    "black stork": {"ciconia nigra"},
+    "white stork": {"ciconia ciconia", "stork"},
+    # Cormorants & Gulls
+    "black-headed gull": {"chroicocephalus ridibundus", "larus ridibundus", "black headed gull"},
+    "brown-headed gull": {"chroicocephalus brunnicephalus", "larus brunnicephalus", "brown headed gull"},
+    "common cormorant": {"phalacrocorax carbo", "great cormorant", "cormorant"},
+    "great cormorant": {"phalacrocorax carbo", "common cormorant", "cormorant"},
+    # Shorebirds
+    "eurasian curlew": {"numenius arquata", "curlew"},
+    "common snipe": {"gallinago gallinago", "snipe"},
+    "little stint": {"calidris minuta", "stint"},
+    "green sandpiper": {"tringa ochropus", "sandpiper"},
+    "wood sandpiper": {"tringa glareola", "sandpiper"},
+    "common greenshank": {"tringa nebularia", "greenshank"},
+    "black-tailed godwit": {"limosa limosa", "godwit"},
+    "kentish plover": {"charadrius alexandrinus", "plover"},
+    # Passerines
+    "yellow wagtail": {"motacilla flava", "western yellow wagtail", "wagtail"},
+    "white wagtail": {"motacilla alba", "wagtail"},
+    "barn swallow": {"hirundo rustica", "swallow"},
+    "sand martin": {"riparia riparia", "bank swallow"},
+    "bluethroat": {"luscinia svecica"},
+    "common starling": {"sturnus vulgaris", "european starling", "starling"},
+    "common chiffchaff": {"phylloscopus collybita", "chiffchaff"},
+    # Raptors
+    "osprey": {"pandion haliaetus", "western osprey", "fish hawk"},
 }
 
 

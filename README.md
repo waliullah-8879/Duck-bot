@@ -1,8 +1,8 @@
 # Bird Daily Video Bot
 
-Makes one 2-3 minute vertical Urdu documentary per day about one duck, goose, or dove species, then posts it to your Facebook Page. Ducks are selected five times as often as geese or doves.
+Makes one 2-3 minute vertical Urdu documentary per day about one wild migratory bird species (45 species including waterfowl, cranes, bustards, waterbirds, waders, shorebirds, passerines, and raptors), then posts it to your Facebook Page.
 
-**Pipeline:** pick one species → use exact-species Pixabay clips first, then related clips from the same group only if needed to reach three → write that species' documentary script (Claude or Urdu fallback) → voiceover (edge-tts, free) → assemble with ffmpeg (1080x1920, no on-video captions) → upload to Facebook Page. Duck topics may use other tagged duck/waterfowl footage as supporting shots; geese and dove topics stay within their groups. Pet footage and unrelated bird groups are rejected. Scheduled runs skip up to ten species if there is not enough related footage.
+**Pipeline:** pick one species → use exact-species Pixabay clips first, then related clips from the same group only if needed to reach three → write that species' documentary script (Claude or Urdu fallback) → voiceover (edge-tts, free) → assemble with ffmpeg (1080x1920, no on-video captions) → upload to Facebook Page. Cartoons, 3D animations, toys, pet footage, and unrelated animal groups are strictly filtered out. Scheduled runs skip up to ten species if there is not enough related footage.
 
 ## 1. Setup (local test)
 
