@@ -11,7 +11,7 @@ import requests
 API = "https://pixabay.com/api/videos/"
 CACHE_DIR = Path(__file__).parent / ".cache" / "pixabay"
 CACHE_TTL = 24 * 60 * 60
-CACHE_VERSION = 3
+CACHE_VERSION = 4
 MIN_SPECIES_CLIPS = 3
 GROUP_SEARCH_TERMS = {
     "ducks": ["wild ducks waterfowl", "ducks swimming pond", "ducks flying lake"],
@@ -23,7 +23,23 @@ GROUP_TAGS = {
     "geese": {"goose", "geese"},
     "doves": {"dove", "doves", "pigeon", "pigeons"},
 }
-NON_BIRD_TAGS = {"dog", "dogs", "puppy", "puppies", "cat", "cats", "kitten", "pet", "pets", "toy", "plush"}
+EXCLUDED_TAGS = {
+    # Animation, 3D CGI, renders, cartoons
+    "animation", "animated", "cartoon", "cartoons", "3d", "cgi", "render", "rendered",
+    "rendering", "illustration", "drawing", "vector", "graphic", "graphics", "motion graphics",
+    "character", "characters", "puppet", "mascot", "costume", "model", "claymation",
+    "origami", "figure", "figurine", "statue", "sculpture", "clipart",
+    # Toys, plush, fake/artificial items
+    "toy", "toys", "plush", "stuffed", "rubber duck", "bath toy", "fake", "artificial",
+    # AI generated / synthetic
+    "ai generated", "synthetic",
+    # Holiday / novelty / comical / dance themes (like dancing Santa duck)
+    "santa", "christmas", "xmas", "dancing", "dance", "fitness",
+    # Domestic pets & non-birds
+    "dog", "dogs", "puppy", "puppies", "cat", "cats", "kitten", "kittens", "pet", "pets",
+    # Culinary / food
+    "recipe", "roast", "cooked", "cooking", "meat", "dish",
+}
 SCIENTIFIC_NAME_ALIASES = {
     "common pochard": {"aythya ferina", "pochard"},
     "mallard duck": {"anas platyrhynchos", "mallard"},
@@ -55,7 +71,26 @@ def _normalize_words(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", value.casefold()).strip()
 
 
+def _is_real_wildlife_video(hit: dict) -> bool:
+    video_type = str(hit.get("type", "")).strip().lower()
+    if video_type and video_type != "film":
+        return False
+    if hit.get("isAiGenerated"):
+        return False
+
+    tags = hit.get("tags", "")
+    if isinstance(tags, list):
+        tags = ",".join(str(tag) for tag in tags)
+    all_text = f"{tags} {hit.get('name', '')} {hit.get('description', '')}"
+    normalized = f" {_normalize_words(all_text)} "
+    if any(f" {tag} " in normalized for tag in EXCLUDED_TAGS):
+        return False
+    return True
+
+
 def _matches_species(hit: dict, species: str) -> bool:
+    if not _is_real_wildlife_video(hit):
+        return False
     tags = hit.get("tags", "")
     if isinstance(tags, list):
         tags = ",".join(str(tag) for tag in tags)
@@ -67,6 +102,8 @@ def _matches_species(hit: dict, species: str) -> bool:
 
 
 def _matches_group(hit: dict, group: str) -> bool:
+    if not _is_real_wildlife_video(hit):
+        return False
     allowed_tags = GROUP_TAGS.get(group)
     if not allowed_tags:
         return False
@@ -74,8 +111,6 @@ def _matches_group(hit: dict, group: str) -> bool:
     if isinstance(tags, list):
         tags = ",".join(str(tag) for tag in tags)
     normalized_tags = f" {_normalize_words(str(tags))} "
-    if any(f" {tag} " in normalized_tags for tag in NON_BIRD_TAGS):
-        return False
     return any(f" {tag} " in normalized_tags for tag in allowed_tags)
 
 
@@ -101,7 +136,7 @@ def _download_clip(url: str, dest: Path, attempts: int = 3) -> bool:
 
 
 def _search_videos(term: str, key: str, order: str) -> dict:
-    cache_key = f"v{CACHE_VERSION}:{term.casefold()}:animals:200:{order}:safe"
+    cache_key = f"v{CACHE_VERSION}:{term.casefold()}:film:animals:200:{order}:safe"
     cache_name = hashlib.sha256(cache_key.encode("utf-8")).hexdigest() + ".json"
     cache_file = CACHE_DIR / cache_name
     try:
@@ -116,6 +151,7 @@ def _search_videos(term: str, key: str, order: str) -> dict:
             params={
                 "key": key,
                 "q": term,
+                "video_type": "film",
                 "category": "animals",
                 "per_page": 200,
                 "order": order,
@@ -150,6 +186,8 @@ def fetch_clips(terms: list[str], workdir: Path, species: str, group: str = "", 
                 for hit in _search_videos(term, key, order).get("hits", []):
                     video_id = hit.get("id")
                     if video_id is None or video_id in seen or len(clips) >= want:
+                        continue
+                    if not _is_real_wildlife_video(hit):
                         continue
                     if not matcher(hit):
                         continue
