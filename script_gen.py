@@ -62,20 +62,21 @@ SPECIES_SEARCH_ALIASES = {
     "osprey": ["osprey bird flight", "Pandion haliaetus", "osprey catching fish"],
 }
 
-PROMPT = """You write a 2-3 minute Urdu wildlife documentary for a vertical Facebook video about a migratory bird species.
+PROMPT = """You write a viral, high-retention 45-60 second Urdu wildlife Reel for Facebook about a migratory bird species visiting Pakistan along the Indus Flyway.
 
 Topic: {topic}
 
 Rules:
-- Focus the entire documentary on the single migratory bird species named in the topic. Do not mention other species.
-- Write 260-340 words of natural Pakistani Urdu narration in Urdu script, not Roman Urdu.
-- Make this episode distinct and specific to the bird's migration route (such as the Indus Flyway), identification, seasonal habitat, feeding, and behavior.
-- Use unhurried, clear spoken sentences. Never pad or repeat points.
-- Never invent facts, statistics, or conservation status. Qualify facts that vary by region.
+- Focus entirely on the single migratory bird species named in the topic.
+- Write 85-125 words of natural, exciting Pakistani Urdu narration in Urdu script (not Roman Urdu).
+- START with an irresistible 1-sentence curiosity hook that stops the scroll within 3 seconds (e.g. asking a surprising question about its incredible migration, flying speed, or survival in winter).
+- Highlight 2-3 fascinating facts: where it migrates from (Siberia/Central Asia), its unique identification/plumage, and its behavior in Pakistani wetlands (e.g. Chashma, Taunsa, Haleji).
+- END with an engaging question inviting viewers to comment and follow the page (e.g. asking if they have spotted this bird in their area).
+- Use natural, energetic spoken Urdu sentences. Never sound like a dull textbook.
 - Give 5 English footage searches, all naming only this exact species and different views or actions.
 
 Return ONLY JSON with keys:
-title (max 80 chars), narration (string), search_terms (list of 5), hashtags (list of 6, no # sign)."""
+title (max 80 chars), narration (string), search_terms (list of 5), hashtags (list of 8, no # sign)."""
 
 URDU_BIRD_NAMES = {
     # Ducks & Waterfowl
@@ -166,18 +167,24 @@ def _fallback(topic: str) -> dict:
     bird = _urdu_species_name(name.strip())
     focus = focus.strip().rstrip(".")
     narration = (
-        f"آج کی دستاویزی ویڈیو میں ہماری توجہ صرف {bird} پر ہے۔ اس قسط کا موضوع {focus} ہے۔ ہم اس کی شناخت، رہائش، خوراک اور رویوں کو دیکھیں گے۔ موسم اور علاقے کے ساتھ مشاہدات بدل سکتے ہیں، اس لیے ہر بات کو مقامی ماحول کے تناظر میں سمجھیں۔\n\n"
-        f"{bird} کو پہچاننے کے لیے جسمانی ساخت، چونچ، گردن، دم، پروں کے رنگ اور حرکت پر غور کریں۔ روشنی یا موسم کے باعث رنگ مختلف دکھائی دے سکتے ہیں، اس لیے ایک نشان کے بجائے کئی خصوصیات کو ساتھ دیکھیں۔ مشاہدے کے لیے دوربین یا کیمرہ استعمال کریں، پرندے کو پکڑنے یا اس کے قریب جانے کی کوشش نہ کریں۔\n\n"
-        f"اس کی رہائش روزمرہ زندگی کا اہم حصہ ہے۔ پانی، پودوں، درختوں، کھلی جگہ اور محفوظ گھونسلے کی دستیابی اثر ڈال سکتی ہے کہ {bird} کہاں آرام کرتا اور خوراک تلاش کرتا ہے۔ صرف پرندے کو نہیں، اس کے اردگرد کے مسکن کو بھی غور سے دیکھیں۔\n\n"
-        f"خوراک حاصل کرنے کا انداز چونچ، پاؤں اور حرکت سے جڑا ہوتا ہے۔ دیکھیں کہ {bird} اپنے مسکن میں کس جگہ اور کس انداز سے خوراک تلاش کرتا ہے۔ موسم اور دستیاب خوراک اس کے رویے میں فرق ڈال سکتے ہیں؛ ایک مشاہدے کو ہر جگہ کی مستقل عادت نہ سمجھیں۔\n\n"
-        f"آواز، پرواز، آرام اور دوسری حرکات کو مختلف اوقات میں دیکھنے سے اس کے رویے کو سمجھنے میں مدد ملتی ہے۔ موسم کے ساتھ سرگرمی یا نقل و حرکت بدل سکتی ہے، لیکن یہ فرق ہر علاقے میں یکساں نہیں ہوتا۔ صبر سے کیے گئے کئی مشاہدات زیادہ مکمل تصویر پیش کرتے ہیں۔\n\n"
-        f"صاف اور محفوظ مسکن پرندے کے لیے اہم ہے۔ گھونسلوں سے فاصلہ رکھیں، شور نہ کریں اور جنگلی پرندوں کو نہ چھوئیں۔ {bird} کے بارے میں مزید جاننے کے لیے معتبر مقامی معلومات سے مدد لیں۔ اس قسط میں ہم نے صرف اسی نوع پر توجہ رکھی؛ اگلی بار خاموشی اور مناسب فاصلے سے اس کے قدرتی رویے دیکھیں۔"
+        f"کیا آپ جانتے ہیں کہ {bird} ہزاروں کلومیٹر کا طوفانی سفر طے کر کے ہر سال پاکستان کے دریاؤں اور جھیلوں پر کیوں پہنچتا ہے؟\n\n"
+        f"یہ خوبصورت مہاجر پرندہ موسم سرما میں سائبیریا اور وسطی ایشیا کی شدید برفباری سے بچنے کے لیے انڈس فلائی وے کے ذریعے پاکستان کا رخ کرتا ہے۔ {bird} اپنی تیز رفتار پرواز، نایاب رنگوں اور {focus} کی وجہ سے شکار اور فطرت کے شوقین افراد میں بے حد مشہور ہے۔\n\n"
+        f"پانی میں اس کی چستی اور غوطہ زنی واقعی لاجواب ہے۔ کیا آپ نے کبھی اپنے قریبی آبی ذخیرے پر اس پرندے کو دیکھا ہے؟ کمنٹس میں ضرور بتائیں اور ایسی مزید ویڈیوز کے لیے فالو کریں!"
     )
     return {
-        "title": f"{bird} کے بارے میں",
+        "title": f"{bird} | پاکستان کا نایاب مہاجر پرندہ",
         "narration": narration,
         "search_terms": bird_search_terms(topic),
-        "hashtags": ["پرندے", "فطرت", "قدرتی_ماحول", "دستاویزی_فلم", "پرندوں_کا_مشاہدہ", "اردو"],
+        "hashtags": [
+            "Reels",
+            "ViralReels",
+            "PakistanWildlife",
+            "MigratoryBirds",
+            "IndusFlyway",
+            "PakistanHunting",
+            "BirdWatching",
+            "NatureLovers",
+        ],
     }
 
 
@@ -196,7 +203,7 @@ def generate_script(topic: str) -> dict:
             },
             json={
                 "model": MODEL,
-                "max_tokens": 2200,
+                "max_tokens": 1200,
                 "messages": [{"role": "user", "content": PROMPT.format(topic=topic)}],
             },
             timeout=60,
@@ -209,8 +216,8 @@ def generate_script(topic: str) -> dict:
         if not re.search(r"[\u0600-\u06FF]", data["narration"]):
             raise ValueError("Claude returned narration without Urdu script.")
         word_count = len(data["narration"].split())
-        if not 240 <= word_count <= 380:
-            raise ValueError("Claude returned narration outside the 2-3 minute length range.")
+        if not 70 <= word_count <= 150:
+            raise ValueError(f"Claude returned narration ({word_count} words) outside the 45-60 second Reel range.")
         data["search_terms"] = bird_search_terms(topic)
         return data
     except Exception as e:  # network / parse problems should not kill the daily run

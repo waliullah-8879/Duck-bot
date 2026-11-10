@@ -29,7 +29,7 @@ def build_video(clips: list[Path], audio: Path, workdir: Path, out: Path) -> Pat
         run([
             "ffmpeg", "-y", "-stream_loop", "-1", "-i", str(c), "-t", f"{seg:.3f}",
             "-vf", f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},fps={FPS},setsar=1",
-            "-an", "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-pix_fmt", "yuv420p", str(p),
+            "-an", "-c:v", "libx264", "-preset", "fast", "-crf", "18", "-pix_fmt", "yuv420p", str(p),
         ])
         parts.append(p)
 
@@ -39,7 +39,7 @@ def build_video(clips: list[Path], audio: Path, workdir: Path, out: Path) -> Pat
     run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-c", "copy", str(joined)], cwd=workdir)
 
     base = ["ffmpeg", "-y", "-i", str(joined), "-i", str(audio)]
-    tail = ["-c:v", "libx264", "-preset", "slow", "-crf", "18", "-c:a", "aac", "-b:a", "192k",
+    tail = ["-c:v", "libx264", "-preset", "fast", "-crf", "18", "-c:a", "aac", "-b:a", "192k",
             "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-shortest", str(out)]
     run(base + tail)
     return out

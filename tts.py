@@ -5,10 +5,11 @@ import os
 import edge_tts
 
 VOICE = os.getenv("TTS_VOICE", "ur-PK-AsadNeural")
+RATE = os.getenv("TTS_RATE", "+3%")
 
 
 async def _speak(text: str, out: str):
-    await edge_tts.Communicate(text, VOICE, rate="-5%").save(out)
+    await edge_tts.Communicate(text, VOICE, rate=RATE).save(out)
 
 
 def synthesize(text: str, out_path: str) -> str:
