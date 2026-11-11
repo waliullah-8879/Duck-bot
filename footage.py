@@ -45,10 +45,17 @@ EXCLUDED_TAGS = {
     "ai generated", "synthetic",
     # Holiday / novelty / comical / dance themes (like dancing Santa duck)
     "santa", "christmas", "xmas", "dancing", "dance", "fitness",
+    "holiday", "festive", "decoration", "decorative", "ornament",
     # Domestic pets & non-birds
     "dog", "dogs", "puppy", "puppies", "cat", "cats", "kitten", "kittens", "pet", "pets",
     # Culinary / food
     "recipe", "roast", "cooked", "cooking", "meat", "dish",
+}
+# Hard-coded Pixabay clip IDs that are known cartoons/animations regardless of their tags.
+# Add any new offending clip IDs here to permanently block them.
+BLOCKED_CLIP_IDS: set[int] = {
+    385453,  # 3D yellow dancing duck with Santa hat
+    385454,  # 3D green mallard duck with Santa hat
 }
 SCIENTIFIC_NAME_ALIASES = {
     # Ducks & Waterfowl
@@ -125,6 +132,9 @@ def _normalize_words(value: str) -> str:
 
 
 def _is_real_wildlife_video(hit: dict) -> bool:
+    # Hard-block known cartoon/animation clip IDs regardless of their metadata.
+    if hit.get("id") in BLOCKED_CLIP_IDS:
+        return False
     video_type = str(hit.get("type", "")).strip().lower()
     if video_type and video_type != "film":
         return False

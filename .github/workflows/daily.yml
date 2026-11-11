@@ -20,8 +20,11 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache/pixabay
-          key: pixabay-search-${{ runner.os }}-${{ github.run_id }}
-          restore-keys: pixabay-search-${{ runner.os }}-
+          # Key prefix includes footage.py CACHE_VERSION (v4) so old cartoon-polluted
+          # caches from before the video_type=film + _is_real_wildlife_video fix are
+          # automatically ignored. Bump the prefix whenever CACHE_VERSION changes.
+          key: pixabay-v4-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: pixabay-v4-${{ runner.os }}-
       - name: Install ffmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - run: pip install -r requirements.txt
