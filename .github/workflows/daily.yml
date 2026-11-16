@@ -2,7 +2,7 @@ name: Daily wildlife video
 
 on:
   schedule:
-    - cron: "0 13 * * *"   # every day 13:00 UTC (18:00 Pakistan time)
+    - cron: "0 1 * * *"    # every day 01:00 UTC (06:00 Pakistan time / PKT)
   workflow_dispatch: {}
 
 permissions:
