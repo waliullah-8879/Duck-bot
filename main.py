@@ -17,9 +17,11 @@ load_dotenv()
 from assemble import build_video  # noqa: E402
 from facebook import post_video  # noqa: E402
 from footage import NoMatchingFootageError, fetch_clips  # noqa: E402
+from image_map import get_reference_image  # noqa: E402
 from script_gen import bird_search_terms, generate_script  # noqa: E402
 from topics import mark_used, pick_topic  # noqa: E402
 from tts import synthesize  # noqa: E402
+from verify_image import verify_species_image  # noqa: E402
 
 OUT_DIR = Path(__file__).parent / "output"
 SCHEDULED_TOPIC_ATTEMPTS = 10
@@ -53,6 +55,14 @@ def main():
                 if args.topic:
                     raise
                 print(f"[topic] {exc}; trying another species.")
+                skipped_topics.append(topic)
+                shutil.rmtree(attempt_work, ignore_errors=True)
+                continue
+
+            # --- Image verification: compare first clip against reference ---
+            ref_img = get_reference_image(species)
+            if clips and not verify_species_image(species, ref_img, clips[0]):
+                print(f"[verify] {species}: verification FAILED — trying next species.")
                 skipped_topics.append(topic)
                 shutil.rmtree(attempt_work, ignore_errors=True)
                 continue
