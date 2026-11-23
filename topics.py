@@ -1,4 +1,4 @@
-"""Topic pool + simple no-repeat rotation for migratory birds."""
+"""Topic pool + simple no-repeat rotation for migratory birds and waterfowl."""
 import json
 from pathlib import Path
 import random
@@ -8,70 +8,44 @@ HISTORY = Path(__file__).parent / "history.json"
 TOPICS = {
     "ducks": [
         "Mallard: seasonal migration and wetland plumage",
-        "Northern Pintail: long-distance flight and aerodynamic shape",
-        "Northern Shoveler: specialized bill and surface feeding",
-        "Common Teal: rapid flight and shallow wetland habitat",
-        "Eurasian Wigeon: grazing habits and distinctive whistle call",
-        "Gadwall: subtle plumage and dabbling behavior",
-        "Common Pochard: diving behavior and winter flocking",
-        "Red-crested Pochard: striking plumage and diving depth",
+        "Wood Duck: vibrant colors and forest wetland habitat",
+        "Mandarin Duck: exotic plumage and courtship display",
+        "Common Merganser: sharp serrated bill and expert diving",
+        "Common Teal: rapid flight and shallow wetland feeding",
         "Tufted Duck: underwater foraging and distinctive crest",
-        "Garganey: nocturnal migration and breeding plumage",
-        "Ruddy Shelduck: alert behavior and inland water habitat",
-        "Common Shelduck: coastal mudflats and distinctive markings",
     ],
-    "geese": [
-        "Bar-headed Goose: high-altitude Himalayan migration",
+    "geese_and_swans": [
+        "Canada Goose: V-formation flight and wetland nesting",
         "Greylag Goose: flock leadership and wetland grazing",
-        "Greater White-fronted Goose: family bonds and tundra origins",
-    ],
-    "cranes_and_bustards": [
-        "Common Crane: graceful flight and wetland stopovers",
-        "Demoiselle Crane: challenging mountain migration and courtship dance",
-        "Houbara Bustard: desert adaptation and stealthy behavior",
+        "Egyptian Goose: ancient wetland heritage and striking eye markings",
+        "Black Swan: elegant swimming and red bill contrast",
+        "Mute Swan: graceful glide and majestic wingspan",
     ],
     "waterbirds": [
         "Greater Flamingo: filter feeding in saline lagoons",
-        "Lesser Flamingo: alkaline lake ecology and flock movement",
         "Great White Pelican: cooperative fishing and soaring flight",
         "Dalmatian Pelican: massive wingspan and freshwater lakes",
-        "Eurasian Spoonbill: sweeping bill motion in shallow waters",
-        "Black Stork: solitary habits and quiet forest wetlands",
         "White Stork: long-distance thermals and wetland foraging",
+        "Black Stork: solitary habits and quiet forest wetlands",
+        "Grey Heron: patient stealth hunting along water edges",
+        "Great Egret: pristine white plumage and lightning strike feeding",
+        "Common Kingfisher: high-speed diving and iridescent feathers",
     ],
-    "cormorants_and_gulls": [
-        "Black-headed Gull: agile flight and opportunistic feeding",
-        "Brown-headed Gull: high-altitude breeding and seasonal plumage",
-        "Common Cormorant: expert underwater fishing and wing drying",
-        "Great Cormorant: deep diving and coastal roosting",
-    ],
-    "shorebirds": [
-        "Eurasian Curlew: curved bill and coastal mudflat probing",
-        "Common Snipe: camouflage in marshlands and zigzag flight",
-        "Little Stint: endurance migration and rapid shoreline feeding",
-        "Green Sandpiper: solitary foraging along freshwater margins",
-        "Wood Sandpiper: marshland foraging and agile flight",
-        "Common Greenshank: alert calls and active wetland hunting",
-        "Black-tailed Godwit: deep-mud probing and long-distance flight",
-        "Kentish Plover: nesting camouflage and sandy shore running",
+    "cormorants": [
+        "Great Cormorant: expert underwater fishing and wing drying",
+        "Common Cormorant: deep diving and coastal roosting",
     ],
     "passerines": [
         "Yellow Wagtail: tail pumping and grassland insect hunting",
         "White Wagtail: urban adaptability and energetic motion",
         "Barn Swallow: aerial insect hunting and long-distance journey",
-        "Sand Martin: riverbank nesting colonies and agile swooping",
-        "Bluethroat: skulking behavior in reeds and mimicry songs",
         "Common Starling: synchronized murmurations and winter flocks",
-        "Common Chiffchaff: canopy insect foraging and rhythmic call",
-    ],
-    "raptors": [
-        "Osprey: aerial hovering and precision fish hunting",
     ],
 }
 
 ORDER = [
-    "ducks", "ducks", "geese", "ducks", "cranes_and_bustards",
-    "waterbirds", "shorebirds", "cormorants_and_gulls", "passerines", "raptors",
+    "ducks", "geese_and_swans", "waterbirds", "ducks", "cormorants",
+    "waterbirds", "passerines", "ducks", "geese_and_swans",
 ]
 
 

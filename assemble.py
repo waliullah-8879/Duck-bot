@@ -1,8 +1,9 @@
-"""Assemble a high-quality 1080x1920 video from clips and narration."""
+"""Assemble a high-quality 1080x1920 video from clips and narration with dynamic pacing."""
 import subprocess
 from pathlib import Path
 
 W, H, FPS = 1080, 1920, 30
+TARGET_CUT_DURATION = 3.5  # Dynamic, viral cut length (seconds per shot)
 
 
 def run(cmd: list[str], cwd: Path | None = None):
@@ -21,17 +22,39 @@ def build_video(clips: list[Path], audio: Path, workdir: Path, out: Path) -> Pat
     if not clips:
         raise ValueError("At least one bird video clip is required.")
     total = duration(audio) + 0.3
-    seg = total / len(clips)
 
+    # Gather durations of all available unique clips
+    clip_durations = [duration(c) for c in clips]
+
+    # Build sequence of dynamic cuts (never repeating the same clip back-to-back)
     parts = []
-    for i, c in enumerate(clips):
-        p = workdir / f"part_{i:02d}.mp4"
+    elapsed = 0.0
+    clip_offsets = [0.0] * len(clips)
+    cut_idx = 0
+
+    while elapsed < total:
+        remaining = total - elapsed
+        cut_len = min(TARGET_CUT_DURATION, remaining)
+        c_i = cut_idx % len(clips)
+        c_path = clips[c_i]
+        c_dur = clip_durations[c_i]
+
+        offset = clip_offsets[c_i]
+        # If remaining portion of this clip is too short for a clean cut, reset offset
+        if offset + cut_len > c_dur:
+            offset = 0.0
+            clip_offsets[c_i] = 0.0
+
+        p = workdir / f"part_{cut_idx:03d}.mp4"
         run([
-            "ffmpeg", "-y", "-stream_loop", "-1", "-i", str(c), "-t", f"{seg:.3f}",
+            "ffmpeg", "-y", "-ss", f"{offset:.3f}", "-i", str(c_path), "-t", f"{cut_len:.3f}",
             "-vf", f"scale={W}:{H}:force_original_aspect_ratio=increase,crop={W}:{H},fps={FPS},setsar=1",
             "-an", "-c:v", "libx264", "-preset", "fast", "-crf", "18", "-pix_fmt", "yuv420p", str(p),
         ])
         parts.append(p)
+        clip_offsets[c_i] += cut_len
+        elapsed += cut_len
+        cut_idx += 1
 
     lst = workdir / "list.txt"
     lst.write_text("".join(f"file '{p.name}'\n" for p in parts), encoding="utf-8")

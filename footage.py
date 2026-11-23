@@ -11,28 +11,9 @@ import requests
 API = "https://pixabay.com/api/videos/"
 CACHE_DIR = Path(__file__).parent / ".cache" / "pixabay"
 CACHE_TTL = 24 * 60 * 60
-CACHE_VERSION = 4
-MIN_SPECIES_CLIPS = 3
-GROUP_SEARCH_TERMS = {
-    "ducks": ["wild ducks waterfowl", "ducks swimming pond", "ducks flying lake"],
-    "geese": ["wild geese waterfowl", "geese flying flock", "geese swimming lake"],
-    "cranes_and_bustards": ["crane bird flying wetland", "cranes flock lake", "bustard bird wildlife"],
-    "waterbirds": ["flamingo flock water", "pelican swimming lake", "stork bird wetland", "spoonbill bird"],
-    "cormorants_and_gulls": ["cormorant bird water", "seagulls flying sea", "gull bird coast"],
-    "shorebirds": ["shorebird sandpiper wetland", "curlew bird mudflat", "snipe bird marsh", "plover bird beach"],
-    "passerines": ["wagtail bird nature", "swallow bird flying", "songbird branch wildlife", "starling flock"],
-    "raptors": ["osprey bird flight", "fish eagle raptor", "osprey catching fish"],
-}
-GROUP_TAGS = {
-    "ducks": {"duck", "ducks", "waterfowl", "shelduck", "teal", "pochard", "wigeon", "mallard"},
-    "geese": {"goose", "geese"},
-    "cranes_and_bustards": {"crane", "cranes", "bustard"},
-    "waterbirds": {"flamingo", "flamingos", "pelican", "pelicans", "stork", "storks", "spoonbill"},
-    "cormorants_and_gulls": {"cormorant", "cormorants", "gull", "gulls", "seagull", "seagulls"},
-    "shorebirds": {"sandpiper", "curlew", "snipe", "plover", "godwit", "stint", "greenshank", "shorebird", "wader"},
-    "passerines": {"wagtail", "swallow", "martin", "starling", "bluethroat", "chiffchaff", "songbird"},
-    "raptors": {"osprey", "raptor", "eagle", "hawk"},
-}
+CACHE_VERSION = 5
+MIN_SPECIES_CLIPS = 5
+
 EXCLUDED_TAGS = {
     # Animation, 3D CGI, renders, cartoons
     "animation", "animated", "cartoon", "cartoons", "3d", "cgi", "render", "rendered",
@@ -43,7 +24,7 @@ EXCLUDED_TAGS = {
     "toy", "toys", "plush", "stuffed", "rubber duck", "bath toy", "fake", "artificial",
     # AI generated / synthetic
     "ai generated", "synthetic",
-    # Holiday / novelty / comical / dance themes (like dancing Santa duck)
+    # Holiday / novelty / comical / dance themes
     "santa", "christmas", "xmas", "dancing", "dance", "fitness",
     "holiday", "festive", "decoration", "decorative", "ornament",
     # Domestic pets & non-birds
@@ -51,66 +32,44 @@ EXCLUDED_TAGS = {
     # Culinary / food
     "recipe", "roast", "cooked", "cooking", "meat", "dish",
 }
+
 # Hard-coded Pixabay clip IDs that are known cartoons/animations regardless of their tags.
-# Add any new offending clip IDs here to permanently block them.
 BLOCKED_CLIP_IDS: set[int] = {
     385453,  # 3D yellow dancing duck with Santa hat
     385454,  # 3D green mallard duck with Santa hat
 }
+
 SCIENTIFIC_NAME_ALIASES = {
     # Ducks & Waterfowl
-    "mallard": {"anas platyrhynchos", "mallard duck"},
-    "northern pintail": {"anas acuta", "pintail", "pintail duck"},
-    "northern shoveler": {"spatula clypeata", "shoveler", "shoveler duck", "anas clypeata"},
-    "common teal": {"anas crecca", "eurasian teal", "teal", "green winged teal"},
-    "eurasian wigeon": {"mareca penelope", "wigeon", "anas penelope"},
-    "gadwall": {"mareca strepera", "anas strepera"},
-    "common pochard": {"aythya ferina", "pochard"},
-    "red-crested pochard": {"netta rufina", "red crested pochard"},
-    "tufted duck": {"aythya fuligula"},
-    "garganey": {"spatula querquedula", "anas querquedula"},
-    "ruddy shelduck": {"tadorna ferruginea", "brahminy duck"},
-    "common shelduck": {"tadorna tadorna", "shelduck"},
-    # Geese
-    "bar-headed goose": {"anser indicus", "bar headed goose"},
-    "greylag goose": {"anser anser", "graylag goose"},
-    "greater white-fronted goose": {"anser albifrons", "white-fronted goose"},
-    # Cranes & Bustards
-    "common crane": {"grus grus", "eurasian crane"},
-    "demoiselle crane": {"anthropoides virgo", "grus virgo"},
-    "houbara bustard": {"chlamydotis macqueenii", "chlamydotis undulata", "asian houbara", "bustard"},
-    # Waterbirds
-    "greater flamingo": {"phoenicopterus roseus", "flamingo"},
-    "lesser flamingo": {"phoeniconaias minor", "flamingo"},
+    "mallard": {"anas platyrhynchos", "mallard duck", "mallard", "wild duck", "drake"},
+    "wood duck": {"aix sponsa", "wood duck", "carolina duck"},
+    "mandarin duck": {"aix galericulata", "mandarin duck", "mandarin"},
+    "common merganser": {"mergus merganser", "goosander", "merganser"},
+    "common teal": {"anas crecca", "eurasian teal", "teal duck", "green winged teal"},
+    "tufted duck": {"aythya fuligula", "tufted duck"},
+    # Geese & Swans
+    "canada goose": {"branta canadensis", "canada goose", "canadian goose"},
+    "greylag goose": {"anser anser", "graylag goose", "greylag goose", "greylag"},
+    "egyptian goose": {"alopochen aegyptiaca", "egyptian goose"},
+    "black swan": {"cygnus atratus", "black swan"},
+    "mute swan": {"cygnus olor", "mute swan", "white swan"},
+    # Waterbirds & Waders
+    "greater flamingo": {"phoenicopterus roseus", "flamingo", "flamingos"},
     "great white pelican": {"pelecanus onocrotalus", "white pelican", "pelican"},
-    "dalmatian pelican": {"pelecanus crispus", "pelican"},
-    "eurasian spoonbill": {"platalea leucorodia", "spoonbill"},
-    "black stork": {"ciconia nigra"},
-    "white stork": {"ciconia ciconia", "stork"},
-    # Cormorants & Gulls
-    "black-headed gull": {"chroicocephalus ridibundus", "larus ridibundus", "black headed gull"},
-    "brown-headed gull": {"chroicocephalus brunnicephalus", "larus brunnicephalus", "brown headed gull"},
+    "dalmatian pelican": {"pelecanus crispus", "dalmatian pelican", "pelican"},
+    "white stork": {"ciconia ciconia", "white stork", "stork", "storks"},
+    "black stork": {"ciconia nigra", "black stork"},
+    "grey heron": {"ardea cinerea", "grey heron", "gray heron", "heron"},
+    "great egret": {"ardea alba", "great egret", "white egret", "egret"},
+    "common kingfisher": {"alcedo atthis", "kingfisher", "common kingfisher"},
+    # Cormorants
     "common cormorant": {"phalacrocorax carbo", "great cormorant", "cormorant"},
-    "great cormorant": {"phalacrocorax carbo", "common cormorant", "cormorant"},
-    # Shorebirds
-    "eurasian curlew": {"numenius arquata", "curlew"},
-    "common snipe": {"gallinago gallinago", "snipe"},
-    "little stint": {"calidris minuta", "stint"},
-    "green sandpiper": {"tringa ochropus", "sandpiper"},
-    "wood sandpiper": {"tringa glareola", "sandpiper"},
-    "common greenshank": {"tringa nebularia", "greenshank"},
-    "black-tailed godwit": {"limosa limosa", "godwit"},
-    "kentish plover": {"charadrius alexandrinus", "plover"},
+    "great cormorant": {"phalacrocorax carbo", "great cormorant", "cormorant"},
     # Passerines
-    "yellow wagtail": {"motacilla flava", "western yellow wagtail", "wagtail"},
-    "white wagtail": {"motacilla alba", "wagtail"},
-    "barn swallow": {"hirundo rustica", "swallow"},
-    "sand martin": {"riparia riparia", "bank swallow"},
-    "bluethroat": {"luscinia svecica"},
+    "yellow wagtail": {"motacilla flava", "western yellow wagtail", "yellow wagtail", "wagtail"},
+    "white wagtail": {"motacilla alba", "white wagtail", "wagtail"},
+    "barn swallow": {"hirundo rustica", "barn swallow", "swallow"},
     "common starling": {"sturnus vulgaris", "european starling", "starling"},
-    "common chiffchaff": {"phylloscopus collybita", "chiffchaff"},
-    # Raptors
-    "osprey": {"pandion haliaetus", "western osprey", "fish hawk"},
 }
 
 
@@ -132,7 +91,6 @@ def _normalize_words(value: str) -> str:
 
 
 def _is_real_wildlife_video(hit: dict) -> bool:
-    # Hard-block known cartoon/animation clip IDs regardless of their metadata.
     if hit.get("id") in BLOCKED_CLIP_IDS:
         return False
     video_type = str(hit.get("type", "")).strip().lower()
@@ -162,19 +120,6 @@ def _matches_species(hit: dict, species: str) -> bool:
     aliases = {normalized_species}
     aliases.update(SCIENTIFIC_NAME_ALIASES.get(normalized_species, set()))
     return any(alias and f" {alias} " in normalized_tags for alias in aliases)
-
-
-def _matches_group(hit: dict, group: str) -> bool:
-    if not _is_real_wildlife_video(hit):
-        return False
-    allowed_tags = GROUP_TAGS.get(group)
-    if not allowed_tags:
-        return False
-    tags = hit.get("tags", "")
-    if isinstance(tags, list):
-        tags = ",".join(str(tag) for tag in tags)
-    normalized_tags = f" {_normalize_words(str(tags))} "
-    return any(f" {tag} " in normalized_tags for tag in allowed_tags)
 
 
 def _download_clip(url: str, dest: Path, attempts: int = 3) -> bool:
@@ -234,6 +179,11 @@ def _search_videos(term: str, key: str, order: str) -> dict:
 
 
 def fetch_clips(terms: list[str], workdir: Path, species: str, group: str = "", want: int = 12) -> list[Path]:
+    """Download authentic wildlife video clips strictly matching the topic species.
+    
+    NEVER downloads generic or unmatched birds. If fewer than MIN_SPECIES_CLIPS
+    exact clips are found, raises NoMatchingFootageError so main.py tries the next topic.
+    """
     key = os.getenv("PIXABAY_API_KEY", "").strip()
     if not key:
         raise RuntimeError("Set PIXABAY_API_KEY in your .env file before downloading footage.")
@@ -241,8 +191,8 @@ def fetch_clips(terms: list[str], workdir: Path, species: str, group: str = "", 
     clips: list[Path] = []
     seen: set[int] = set()
 
-    def collect(search_terms: list[str], matcher) -> None:
-        for order in ("latest", "popular"):
+    def collect(search_terms: list[str]) -> None:
+        for order in ("popular", "latest"):
             for term in search_terms:
                 if len(clips) >= want:
                     return
@@ -252,7 +202,7 @@ def fetch_clips(terms: list[str], workdir: Path, species: str, group: str = "", 
                         continue
                     if not _is_real_wildlife_video(hit):
                         continue
-                    if not matcher(hit):
+                    if not _matches_species(hit, species):
                         continue
                     video_file = _best_file(hit)
                     if not video_file:
@@ -262,19 +212,13 @@ def fetch_clips(terms: list[str], workdir: Path, species: str, group: str = "", 
                     if _download_clip(video_file["url"], dest):
                         clips.append(dest)
 
-    collect(terms, lambda hit: _matches_species(hit, species))
-    exact_count = len(clips)
-    minimum = min(MIN_SPECIES_CLIPS, want)
-    if len(clips) < minimum and group in GROUP_SEARCH_TERMS:
-        collect(GROUP_SEARCH_TERMS[group], lambda hit: _matches_group(hit, group))
+    collect(terms)
 
-    if len(clips) < minimum:
-        related_count = len(clips) - exact_count
+    if len(clips) < MIN_SPECIES_CLIPS:
         raise NoMatchingFootageError(
-            f"Pixabay returned {exact_count} exact and {related_count} related {group or 'same-species'} clips "
-            f"for {species!r}; at least {minimum} are required. No unrelated pets or bird groups were used."
+            f"Pixabay returned only {len(clips)} exact wildlife clips for {species!r}; "
+            f"at least {MIN_SPECIES_CLIPS} exact clips are required to guarantee no unmatched footage."
         )
-    related_count = len(clips) - exact_count
-    if related_count:
-        print(f"[footage] Using {related_count} related {group} clips and {exact_count} exact {species} clips.")
+
+    print(f"[footage] Collected {len(clips)} authentic clips matching {species!r} exclusively.")
     return clips

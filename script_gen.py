@@ -1,65 +1,44 @@
 """Turn a topic into a short-video script (narration + title + stock-footage search terms)."""
 import json
 import os
+from pathlib import Path
 import re
 
 import requests
 
 MODEL = os.getenv("CLAUDE_MODEL", "claude-haiku-5-5")
+
 SPECIES_SEARCH_ALIASES = {
     # Ducks & Waterfowl
-    "mallard": ["mallard duck", "Anas platyrhynchos", "wild mallard"],
-    "northern pintail": ["pintail duck", "Anas acuta", "northern pintail duck"],
-    "northern shoveler": ["shoveler duck", "Spatula clypeata", "northern shoveler"],
+    "mallard": ["mallard duck", "Anas platyrhynchos", "wild mallard", "mallard drake"],
+    "wood duck": ["wood duck", "Aix sponsa", "wood duck swimming"],
+    "mandarin duck": ["mandarin duck", "Aix galericulata", "mandarin duck swimming"],
+    "common merganser": ["common merganser", "Mergus merganser", "goosander"],
     "common teal": ["eurasian teal", "Anas crecca", "teal duck"],
-    "eurasian wigeon": ["wigeon duck", "Mareca penelope", "eurasian wigeon"],
-    "gadwall": ["gadwall duck", "Mareca strepera"],
-    "common pochard": ["pochard duck", "Aythya ferina"],
-    "red-crested pochard": ["red crested pochard", "Netta rufina"],
-    "tufted duck": ["tufted duck bird", "Aythya fuligula"],
-    "garganey": ["garganey duck", "Spatula querquedula"],
-    "ruddy shelduck": ["ruddy shelduck duck", "Tadorna ferruginea", "brahminy duck"],
-    "common shelduck": ["shelduck", "Tadorna tadorna", "common shelduck duck"],
-    # Geese
-    "bar-headed goose": ["bar-headed goose flock", "Anser indicus"],
-    "greylag goose": ["greylag goose flock", "Anser anser"],
-    "greater white-fronted goose": ["white-fronted goose", "Anser albifrons"],
-    # Cranes & Bustards
-    "common crane": ["eurasian crane", "Grus grus", "common crane flock"],
-    "demoiselle crane": ["demoiselle crane flock", "Anthropoides virgo", "Grus virgo"],
-    "houbara bustard": ["asian houbara", "Chlamydotis macqueenii", "bustard bird"],
-    # Waterbirds
-    "greater flamingo": ["greater flamingo flock", "Phoenicopterus roseus"],
-    "lesser flamingo": ["lesser flamingo flock", "Phoeniconaias minor"],
-    "great white pelican": ["white pelican", "Pelecanus onocrotalus"],
-    "dalmatian pelican": ["dalmatian pelican bird", "Pelecanus crispus"],
-    "eurasian spoonbill": ["spoonbill bird", "Platalea leucorodia"],
-    "black stork": ["black stork bird", "Ciconia nigra"],
-    "white stork": ["white stork bird", "Ciconia ciconia"],
-    # Cormorants & Gulls
-    "black-headed gull": ["black-headed gull bird", "Chroicocephalus ridibundus"],
-    "brown-headed gull": ["brown-headed gull bird", "Chroicocephalus brunnicephalus"],
+    "tufted duck": ["tufted duck", "Aythya fuligula", "tufted duck swimming"],
+    # Geese & Swans
+    "canada goose": ["canada goose", "Branta canadensis", "canada geese"],
+    "greylag goose": ["greylag goose", "Anser anser", "greylag geese"],
+    "egyptian goose": ["egyptian goose", "Alopochen aegyptiaca"],
+    "black swan": ["black swan", "Cygnus atratus", "black swan swimming"],
+    "mute swan": ["mute swan", "Cygnus olor", "white swan"],
+    # Waterbirds & Waders
+    "greater flamingo": ["greater flamingo", "Phoenicopterus roseus", "flamingo flock"],
+    "great white pelican": ["white pelican", "Pelecanus onocrotalus", "great white pelican"],
+    "dalmatian pelican": ["dalmatian pelican", "Pelecanus crispus"],
+    "white stork": ["white stork", "Ciconia ciconia", "stork bird"],
+    "black stork": ["black stork", "Ciconia nigra"],
+    "grey heron": ["grey heron", "Ardea cinerea", "heron bird"],
+    "great egret": ["great egret", "Ardea alba", "white egret"],
+    "common kingfisher": ["kingfisher", "Alcedo atthis", "common kingfisher"],
+    # Cormorants
     "common cormorant": ["great cormorant", "Phalacrocorax carbo", "cormorant bird"],
-    "great cormorant": ["great cormorant bird", "Phalacrocorax carbo", "cormorant diving"],
-    # Shorebirds
-    "eurasian curlew": ["curlew bird", "Numenius arquata"],
-    "common snipe": ["snipe bird", "Gallinago gallinago"],
-    "little stint": ["little stint bird", "Calidris minuta"],
-    "green sandpiper": ["green sandpiper bird", "Tringa ochropus"],
-    "wood sandpiper": ["wood sandpiper bird", "Tringa glareola"],
-    "common greenshank": ["greenshank bird", "Tringa nebularia"],
-    "black-tailed godwit": ["godwit bird", "Limosa limosa"],
-    "kentish plover": ["kentish plover bird", "Charadrius alexandrinus"],
+    "great cormorant": ["great cormorant", "Phalacrocorax carbo", "cormorant diving"],
     # Passerines
-    "yellow wagtail": ["yellow wagtail bird", "Motacilla flava"],
-    "white wagtail": ["white wagtail bird", "Motacilla alba"],
-    "barn swallow": ["barn swallow bird", "Hirundo rustica"],
-    "sand martin": ["sand martin bird", "bank swallow", "Riparia riparia"],
-    "bluethroat": ["bluethroat bird", "Luscinia svecica"],
+    "yellow wagtail": ["yellow wagtail", "Motacilla flava"],
+    "white wagtail": ["white wagtail", "Motacilla alba"],
+    "barn swallow": ["barn swallow", "Hirundo rustica"],
     "common starling": ["european starling", "Sturnus vulgaris", "starling flock"],
-    "common chiffchaff": ["chiffchaff bird", "Phylloscopus collybita"],
-    # Raptors
-    "osprey": ["osprey bird flight", "Pandion haliaetus", "osprey catching fish"],
 }
 
 PROMPT = """You write a viral, high-retention 45-60 second Urdu wildlife Reel for Facebook about a migratory bird species visiting Pakistan along the Indus Flyway.
@@ -81,65 +60,49 @@ title (max 80 chars), narration (string), search_terms (list of 5), hashtags (li
 URDU_BIRD_NAMES = {
     # Ducks & Waterfowl
     "Mallard": "مالارڈ بطخ (نیل سر)",
-    "Northern Pintail": "شمالی پن ٹیل (سیخ پر)",
-    "Northern Shoveler": "شمالی شولر (چمچ دار بطخ)",
+    "Wood Duck": "ووڈ بطخ (رنگین بطخ)",
+    "Mandarin Duck": "مینڈارن بطخ (شاہکار بطخ)",
+    "Common Merganser": "کامن مرگانسر (ماہی خور بطخ)",
     "Common Teal": "عام ٹیل (چھوٹی مرغابی)",
-    "Eurasian Wigeon": "یوریشین وجن (سرخ سر بطخ)",
-    "Gadwall": "گیڈوال بطخ (بوجھر)",
-    "Common Pochard": "عام پوچارڈ (لال سر)",
-    "Red-crested Pochard": "لال چوٹی والا پوچارڈ",
     "Tufted Duck": "ٹفٹڈ بطخ (کلغی دار بطخ)",
-    "Garganey": "گارگنی بطخ (چیتوا)",
-    "Ruddy Shelduck": "سرخاب (چکوا)",
-    "Common Shelduck": "عام شیلڈک (چیلوا)",
-    # Geese
-    "Bar-headed Goose": "پٹی دار سر والا ہنس (راج ہنس)",
+    # Geese & Swans
+    "Canada Goose": "کینیڈین ہنس (کینیڈا گوز)",
     "Greylag Goose": "سرمئی ہنس (مگھ)",
-    "Greater White-fronted Goose": "سفید ماتھے والا ہنس",
-    # Cranes & Bustards
-    "Common Crane": "عام کونج",
-    "Demoiselle Crane": "کونج (چھوٹی کونج)",
-    "Houbara Bustard": "تلور (ہوبرہ تلور)",
-    # Waterbirds
+    "Egyptian Goose": "مصری ہنس (ایجپشین گوز)",
+    "Black Swan": "کالا راج ہنس (بلیک سوان)",
+    "Mute Swan": "سفید راج ہنس (میوٹ سوان)",
+    # Waterbirds & Waders
     "Greater Flamingo": "بڑا فلیمنگو (راج ہنس)",
-    "Lesser Flamingo": "چھوٹا فلیمنگو",
     "Great White Pelican": "بڑا سفید پیلیکن (ہوصیل)",
     "Dalmatian Pelican": "ڈالمیشین پیلیکن",
-    "Eurasian Spoonbill": "چمچ چونچ (اسپون بل)",
-    "Black Stork": "سیاہ لک لک",
     "White Stork": "سفید لک لک",
-    # Cormorants & Gulls
-    "Black-headed Gull": "سیاہ سر والا گل",
-    "Brown-headed Gull": "بھورے سر والا گل",
+    "Black Stork": "سیاہ لک لک",
+    "Grey Heron": "سرمئی بگلا (گرے ہیرون)",
+    "Great Egret": "بڑا سفید بگلا (گریٹ ایگریٹ)",
+    "Common Kingfisher": "کنگ فشر (نیل کنٹھ مچھی مار)",
+    # Cormorants
     "Common Cormorant": "جل کوّا (کارمورنٹ)",
     "Great Cormorant": "بڑا جل کوّا (گریٹ کارمورنٹ)",
-    # Shorebirds
-    "Eurasian Curlew": "یوریشین کرلیو (بڑی گوگلی)",
-    "Common Snipe": "چہا (کامن سنائپ)",
-    "Little Stint": "لٹل اسٹنٹ",
-    "Green Sandpiper": "سبز سینڈ پائپر",
-    "Wood Sandpiper": "ووڈ سینڈ پائپر",
-    "Common Greenshank": "کامن گرین شینک (تماچا)",
-    "Black-tailed Godwit": "سیاہ دم والا گاڈوٹ",
-    "Kentish Plover": "کینٹش پلوور",
     # Passerines
     "Yellow Wagtail": "پیلی ممولا (ویگ ٹیل)",
     "White Wagtail": "سفید ممولا (دھوبی چڑیا)",
     "Barn Swallow": "ابابیل (بارن سوالو)",
-    "Sand Martin": "ریت ابابیل (سینڈ مارٹن)",
-    "Bluethroat": "نیلا گل گلو (بلیوتھروٹ)",
     "Common Starling": "تلیر (کامن اسٹارلنگ)",
-    "Common Chiffchaff": "کامن چف چیف",
-    # Raptors
-    "Osprey": "مچھی مار عقاب (اوسپرے)",
 }
 
 
 def bird_search_terms(topic: str) -> list[str]:
     subject = topic.split(":", 1)[0].strip()
     aliases = SPECIES_SEARCH_ALIASES.get(subject.casefold(), [])
-    candidates = [subject, *aliases, f"{subject} bird", f"{subject} in habitat", f"{subject} feeding"]
-    return list(dict.fromkeys(candidates))[:5]
+    candidates = [
+        subject,
+        *aliases,
+        f"{subject} wildlife",
+        f"{subject} swimming",
+        f"{subject} flying",
+        f"{subject} bird",
+    ]
+    return list(dict.fromkeys(candidates))[:6]
 
 
 def _urdu_species_name(name: str) -> str:
@@ -155,9 +118,9 @@ def _urdu_species_name(name: str) -> str:
         return f"{name} لک لک"
     if "gull" in lowered:
         return f"{name} گل"
-    if "dove" in lowered or "pigeon" in lowered:
-        return f"{name} فاختہ"
-    if "duck" in lowered or "teal" in lowered or "pochard" in lowered or "wigeon" in lowered or "shelduck" in lowered:
+    if "swan" in lowered:
+        return f"{name} راج ہنس"
+    if "duck" in lowered or "teal" in lowered or "pochard" in lowered or "wigeon" in lowered or "shelduck" in lowered or "merganser" in lowered:
         return f"{name} بطخ"
     return name
 
@@ -167,9 +130,9 @@ def _fallback(topic: str) -> dict:
     bird = _urdu_species_name(name.strip())
     focus = focus.strip().rstrip(".")
     narration = (
-        f"کیا آپ جانتے ہیں کہ {bird} ہزاروں کلومیٹر کا طوفانی سفر طے کر کے ہر سال پاکستان کے دریاؤں اور جھیلوں پر کیوں پہنچتا ہے؟\n\n"
-        f"یہ خوبصورت مہاجر پرندہ موسم سرما میں سائبیریا اور وسطی ایشیا کی شدید برفباری سے بچنے کے لیے انڈس فلائی وے کے ذریعے پاکستان کا رخ کرتا ہے۔ {bird} اپنی تیز رفتار پرواز، نایاب رنگوں اور {focus} کی وجہ سے شکار اور فطرت کے شوقین افراد میں بے حد مشہور ہے۔\n\n"
-        f"پانی میں اس کی چستی اور غوطہ زنی واقعی لاجواب ہے۔ کیا آپ نے کبھی اپنے قریبی آبی ذخیرے پر اس پرندے کو دیکھا ہے؟ کمنٹس میں ضرور بتائیں اور ایسی مزید ویڈیوز کے لیے فالو کریں!"
+        f"کیا آپ جانتے ہیں کہ {bird} ہر سال موسم سرما میں ہزاروں کلومیٹر کا طوفانی سفر طے کر کے پاکستان کی جھیلوں پر کیوں آتا ہے؟\n\n"
+        f"سائبیریا اور وسطی ایشیا کی شدید سردی سے بچنے کے لیے یہ شاندار پرندہ انڈس فلائی وے کے ذریعے ہمارے آبی ذخائر کا رخ کرتا ہے۔ {bird} اپنی تیز رفتار پرواز، خوبصورت پروں اور {focus} کی بدولت دنیا بھر میں بے حد مقبول ہے۔\n\n"
+        f"پانی میں اس کی تیراکی اور انداز واقعی دیکھنے سے تعلق رکھتا ہے۔ کیا آپ نے کبھی اس پرندے کو اپنے قریبی دریا یا جھیل پر دیکھا ہے؟ کمنٹس میں ضرور بتائیں اور پیج کو فالو کرنا نہ بھولیں!"
     )
     return {
         "title": f"{bird} | پاکستان کا نایاب مہاجر پرندہ",
@@ -181,7 +144,7 @@ def _fallback(topic: str) -> dict:
             "PakistanWildlife",
             "MigratoryBirds",
             "IndusFlyway",
-            "PakistanHunting",
+            "Waterfowl",
             "BirdWatching",
             "NatureLovers",
         ],
@@ -220,6 +183,6 @@ def generate_script(topic: str) -> dict:
             raise ValueError(f"Claude returned narration ({word_count} words) outside the 45-60 second Reel range.")
         data["search_terms"] = bird_search_terms(topic)
         return data
-    except Exception as e:  # network / parse problems should not kill the daily run
+    except Exception as e:
         print(f"[script] Claude call failed ({e}); using fallback template.")
         return _fallback(topic)
