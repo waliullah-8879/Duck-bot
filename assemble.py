@@ -1,4 +1,4 @@
-"""Assemble a high-quality 1080x1920 video from clips and narration with dynamic pacing."""
+"""Assemble a high-quality 1080x1920 video from clips and narration/nature audio with dynamic pacing."""
 import subprocess
 from pathlib import Path
 
@@ -18,7 +18,7 @@ def duration(path: Path) -> float:
     return float(out)
 
 
-def build_video(clips: list[Path], audio: Path, workdir: Path, out: Path) -> Path:
+def build_video(clips: list[Path], audio: Path, workdir: Path, out: Path, bg_audio: Path | None = None) -> Path:
     if not clips:
         raise ValueError("At least one bird video clip is required.")
     total = duration(audio) + 0.3
@@ -61,8 +61,21 @@ def build_video(clips: list[Path], audio: Path, workdir: Path, out: Path) -> Pat
     joined = workdir / "joined.mp4"
     run(["ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", str(lst), "-c", "copy", str(joined)], cwd=workdir)
 
-    base = ["ffmpeg", "-y", "-i", str(joined), "-i", str(audio)]
-    tail = ["-c:v", "libx264", "-preset", "fast", "-crf", "18", "-c:a", "aac", "-b:a", "192k",
-            "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-shortest", str(out)]
-    run(base + tail)
+    if bg_audio and Path(bg_audio).exists():
+        # Mix voiceover with atmospheric nature sound in background
+        cmd = [
+            "ffmpeg", "-y", "-i", str(joined), "-i", str(audio), "-i", str(bg_audio),
+            "-filter_complex", "[1:a]volume=1.0[v];[2:a]volume=0.35[b];[v][b]amix=inputs=2:duration=first[a]",
+            "-map", "0:v", "-map", "[a]",
+            "-c:v", "libx264", "-preset", "fast", "-crf", "18", "-c:a", "aac", "-b:a", "192k",
+            "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-shortest", str(out),
+        ]
+        run(cmd)
+    else:
+        # Single audio track (pure nature soundscape or voice)
+        base = ["ffmpeg", "-y", "-i", str(joined), "-i", str(audio)]
+        tail = ["-c:v", "libx264", "-preset", "fast", "-crf", "18", "-c:a", "aac", "-b:a", "192k",
+                "-pix_fmt", "yuv420p", "-movflags", "+faststart", "-shortest", str(out)]
+        run(base + tail)
+
     return out

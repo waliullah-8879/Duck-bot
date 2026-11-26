@@ -143,7 +143,7 @@ def _download_clip(url: str, dest: Path, attempts: int = 3) -> bool:
     return False
 
 
-def _search_videos(term: str, key: str, order: str) -> dict:
+def _search_videos(term: str, key: str, order: str, retries: int = 3) -> dict:
     cache_key = f"v{CACHE_VERSION}:{term.casefold()}:film:animals:200:{order}:safe"
     cache_name = hashlib.sha256(cache_key.encode("utf-8")).hexdigest() + ".json"
     cache_file = CACHE_DIR / cache_name
@@ -153,29 +153,31 @@ def _search_videos(term: str, key: str, order: str) -> dict:
     except (OSError, json.JSONDecodeError):
         pass
 
-    try:
-        response = requests.get(
-            API,
-            params={
-                "key": key,
-                "q": term,
-                "video_type": "film",
-                "category": "animals",
-                "per_page": 200,
-                "order": order,
-                "safesearch": "true",
-            },
-            timeout=30,
-        )
-        response.raise_for_status()
-    except requests.RequestException as exc:
-        status = exc.response.status_code if exc.response is not None else "network error"
-        raise RuntimeError(f"Pixabay video search failed ({status}); check PIXABAY_API_KEY and network access.") from None
-
-    data = response.json()
-    CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    cache_file.write_text(json.dumps(data), encoding="utf-8")
-    return data
+    for attempt in range(retries):
+        try:
+            response = requests.get(
+                API,
+                params={
+                    "key": key,
+                    "q": term,
+                    "video_type": "film",
+                    "category": "animals",
+                    "per_page": 200,
+                    "order": order,
+                    "safesearch": "true",
+                },
+                timeout=30,
+            )
+            response.raise_for_status()
+            data = response.json()
+            CACHE_DIR.mkdir(parents=True, exist_ok=True)
+            cache_file.write_text(json.dumps(data), encoding="utf-8")
+            return data
+        except requests.RequestException as exc:
+            if attempt + 1 == retries:
+                status = exc.response.status_code if exc.response is not None else "network error"
+                raise RuntimeError(f"Pixabay video search failed ({status}); check PIXABAY_API_KEY and network access.") from None
+            time.sleep(1.5 * (attempt + 1))
 
 
 def fetch_clips(terms: list[str], workdir: Path, species: str, group: str = "", want: int = 12) -> list[Path]:

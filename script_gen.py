@@ -2,6 +2,7 @@
 import json
 import os
 from pathlib import Path
+import random
 import re
 
 import requests
@@ -41,16 +42,16 @@ SPECIES_SEARCH_ALIASES = {
     "common starling": ["european starling", "Sturnus vulgaris", "starling flock"],
 }
 
-PROMPT = """You write a viral, high-retention 45-60 second Urdu wildlife Reel for Facebook about a migratory bird species visiting Pakistan along the Indus Flyway.
+PROMPT = """You write a viral, high-retention 40-50 second Urdu wildlife Reel for Facebook about a migratory bird species visiting Pakistan along the Indus Flyway.
 
 Topic: {topic}
 
 Rules:
 - Focus entirely on the single migratory bird species named in the topic.
-- Write 85-125 words of natural, exciting Pakistani Urdu narration in Urdu script (not Roman Urdu).
-- START with an irresistible 1-sentence curiosity hook that stops the scroll within 3 seconds (e.g. asking a surprising question about its incredible migration, flying speed, or survival in winter).
-- Highlight 2-3 fascinating facts: where it migrates from (Siberia/Central Asia), its unique identification/plumage, and its behavior in Pakistani wetlands (e.g. Chashma, Taunsa, Haleji).
-- END with an engaging question inviting viewers to comment and follow the page (e.g. asking if they have spotted this bird in their area).
+- Write 70-110 words of natural, exciting Pakistani Urdu narration in Urdu script (not Roman Urdu).
+- Never use repetitive formulaic phrases like "کیا آپ جانتے ہیں کہ" every time. Vary the opening hook dynamically (e.g. dramatic question, surprising fact, vivid visual description, or speed record).
+- Highlight 2 fascinating, specific facts: its unique colors/plumage, extraordinary flight/diving ability, or winter behavior in Pakistani wetlands (e.g. Chashma, Taunsa, Haleji, Keenjhar).
+- END with an engaging comment hook inviting viewers to follow and share their sightings.
 - Use natural, energetic spoken Urdu sentences. Never sound like a dull textbook.
 - Give 5 English footage searches, all naming only this exact species and different views or actions.
 
@@ -89,6 +90,58 @@ URDU_BIRD_NAMES = {
     "Barn Swallow": "ابابیل (بارن سوالو)",
     "Common Starling": "تلیر (کامن اسٹارلنگ)",
 }
+
+# 8 diverse, non-repeating storytelling templates to ensure scripts are never monotone or repetitive
+VARIED_TEMPLATES = [
+    # 1. Journey & Arrival
+    (
+        "سائبیریا اور وسطی ایشیا کی شدید برفباری کے بعد، {bird} ہزاروں میل کا طوفانی سفر طے کر کے پاکستان کے شفاف پانیوں پر اتر چکا ہے!\n\n"
+        "اس کی غیر معمولی قوتِ پرواز اور {focus} فطرت کا ایسا عجوبہ ہے جو ہر دیکھنے والے کو مسحور کر دیتا ہے۔ انڈس فلائی وے پر اس خوبصورت مہمان کی موجودگی ہمارے ماحول کا فخر ہے۔\n\n"
+        "کیا آپ نے اس خوبصورت پرندے کو کبھی دیکھا ہے؟ کمنٹس میں ضرور بتائیں!"
+    ),
+    # 2. Speed & Agility
+    (
+        "ہوا میں بجلی جیسی تیزی اور پانی کی لہروں پر تیرنے کا کمال انداز—یہ ہے {bird}!\n\n"
+        "یہ شاندار پرندہ اپنی پھرتی اور {focus} کے باعث دنیا بھر میں مشہور ہے۔ پاکستان کے آبی ذخائر جیسے چشمہ بیراج اور ہالیجی جھیل پر اس کا رقص واقعی قابلِ دید ہوتا ہے۔\n\n"
+        "قدرت کے اس حسین نظارے کو لائک کریں اور ایسی مزید ویڈیوز کے لیے فالو کریں!"
+    ),
+    # 3. Colors & Feathers
+    (
+        "فطرت کے تمام دلکش رنگ سمٹ کر {bird} کے پروں میں جلوہ گر ہیں!\n\n"
+        "دور دراز خطوں سے ہجرت کر کے آنے والا یہ مہمان پرندہ اپنی نایاب خوبصورتی اور {focus} سے ہماری جھیلوں کی رونق کو چار چاند لگا دیتا ہے۔ صبح کے وقت پانی پر اس کا عکس دیکھ کر دل خوش ہو جاتا ہے۔\n\n"
+        "اس نایاب پرندے کے لیے ایک کمنٹ ضرور کریں!"
+    ),
+    # 4. Wetlands & Conservation
+    (
+        "پاکستان کے دریا اور جھیلیں دنیا کے نایاب ترین پرندوں کی محفوظ پناہ گاہ ہیں، اور انہی میں سب سے خاص نام {bird} کا ہے۔\n\n"
+        "سردیوں کے موسم میں اس کا سکون بھرا انداز اور {focus} ہر پرندوں کے شوقین کی توجہ کھینچ لیتا ہے۔ یہ معصوم پرندے ہمارے ماحول کی خوبصورتی اور علامت ہیں۔\n\n"
+        "پرندوں کی قدرتی آواز اور خوبصورتی پسند آئی ہو تو شیئر ضرور کریں!"
+    ),
+    # 5. Winter Survival
+    (
+        "منفی چالیس ڈگری کی کڑاکے دار برفانی سردی کو شکست دے کر، {bird} ہر سال ہماری جھیلوں کا رخ کرتا ہے۔\n\n"
+        "اس کا زندہ دل انداز اور {focus} ہمیں یہ سبق دیتا ہے کہ سفر اور امید کا نام ہی زندگی ہے۔ پانی میں اس کا تیرنا اور خوراک کی تلاش کا انداز واقعی حیرت انگیز ہے۔\n\n"
+        "کیا آپ کو اس پرندے کے بارے میں یہ خاص بات معلوم تھی؟"
+    ),
+    # 6. Deep Water & Diving
+    (
+        "پانی کی سطح پر پرسکون تیرتا ہوا {bird} جب اچانک گہرے پانیوں میں اترتا ہے تو دیکھنے والے دنگ رہ جاتے ہیں!\n\n"
+        "اس کی چوکنی آنکھیں اور {focus} اسے ایک ماہر تیراک بناتی ہیں۔ پاکستان کے موسم سرما میں اس کا مشاہدہ قدرت کے قریب ہونے کا سب سے بہترین تجربہ ہے۔\n\n"
+        "آپ کا پسندیدہ پرندہ کون سا ہے؟ کمنٹس میں اپنی رائے کا اظہار کریں!"
+    ),
+    # 7. Flocks & Sky Formations
+    (
+        "نیلے آسمان پر پروں کی لہریں اور خوبصورت ترتیب میں پرواز کرتا ہوا {bird} موسم سرما کی سب سے دلکش تصویر ہے!\n\n"
+        "اس کا باہمی اتحاد، اپنے ساتھیوں کی حفاظت اور {focus} واقعی بے مثال ہے۔ ہر سال اس کی آمد سے ہماری جھیلوں میں ایک نئی زندگی دوڑ جاتی ہے۔\n\n"
+        "ایسی خوبصورت قدرتی ویڈیوز روزانہ دیکھنے کے لیے ہمارے پیج کو ضرور فالو کریں!"
+    ),
+    # 8. Mystery of the Wild
+    (
+        "بغیر کسی نقشے کے ہزاروں کلومیٹر کا فاصلہ طے کر کے ٹھیک اسی مقام پر پہنچنا—یہ ہے {bird} کا ناقابلِ فراموش کمال!\n\n"
+        "اس کا پروقار انداز اور {focus} خالقِ کائنات کی عظیم کاریگری کا منہ بولتا ثبوت ہے۔ ٹھنڈے پانیوں پر اس کے خوشگوار لمحات دل کو بے پناہ سکون بخشتے ہیں۔\n\n"
+        "اس خوبصورت تخلیق کے لیے سبحان اللہ ضرور لکھیں!"
+    ),
+]
 
 
 def bird_search_terms(topic: str) -> list[str]:
@@ -129,11 +182,10 @@ def _fallback(topic: str) -> dict:
     name, _, focus = topic.partition(":")
     bird = _urdu_species_name(name.strip())
     focus = focus.strip().rstrip(".")
-    narration = (
-        f"کیا آپ جانتے ہیں کہ {bird} ہر سال موسم سرما میں ہزاروں کلومیٹر کا طوفانی سفر طے کر کے پاکستان کی جھیلوں پر کیوں آتا ہے؟\n\n"
-        f"سائبیریا اور وسطی ایشیا کی شدید سردی سے بچنے کے لیے یہ شاندار پرندہ انڈس فلائی وے کے ذریعے ہمارے آبی ذخائر کا رخ کرتا ہے۔ {bird} اپنی تیز رفتار پرواز، خوبصورت پروں اور {focus} کی بدولت دنیا بھر میں بے حد مقبول ہے۔\n\n"
-        f"پانی میں اس کی تیراکی اور انداز واقعی دیکھنے سے تعلق رکھتا ہے۔ کیا آپ نے کبھی اس پرندے کو اپنے قریبی دریا یا جھیل پر دیکھا ہے؟ کمنٹس میں ضرور بتائیں اور پیج کو فالو کرنا نہ بھولیں!"
-    )
+    # Pick randomly from the 8 diverse templates so no two days sound alike
+    template = random.choice(VARIED_TEMPLATES)
+    narration = template.format(bird=bird, focus=focus)
+
     return {
         "title": f"{bird} | پاکستان کا نایاب مہاجر پرندہ",
         "narration": narration,
@@ -154,7 +206,7 @@ def _fallback(topic: str) -> dict:
 def generate_script(topic: str) -> dict:
     key = os.getenv("ANTHROPIC_API_KEY")
     if not key:
-        print("[script] No ANTHROPIC_API_KEY set, using fallback template.")
+        print("[script] No ANTHROPIC_API_KEY set, using dynamic fallback template.")
         return _fallback(topic)
     try:
         r = requests.post(
@@ -179,10 +231,10 @@ def generate_script(topic: str) -> dict:
         if not re.search(r"[\u0600-\u06FF]", data["narration"]):
             raise ValueError("Claude returned narration without Urdu script.")
         word_count = len(data["narration"].split())
-        if not 70 <= word_count <= 150:
-            raise ValueError(f"Claude returned narration ({word_count} words) outside the 45-60 second Reel range.")
+        if not 60 <= word_count <= 140:
+            raise ValueError(f"Claude returned narration ({word_count} words) outside target range.")
         data["search_terms"] = bird_search_terms(topic)
         return data
     except Exception as e:
-        print(f"[script] Claude call failed ({e}); using fallback template.")
+        print(f"[script] Claude call failed ({e}); using dynamic fallback template.")
         return _fallback(topic)
