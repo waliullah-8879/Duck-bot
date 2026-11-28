@@ -2,7 +2,8 @@ name: Daily wildlife video
 
 on:
   schedule:
-    - cron: "0 1 * * *"    # every day 01:00 UTC (06:00 Pakistan time / PKT)
+    - cron: "0 1 * * *"    # 01:00 UTC (06:00 AM PKT / 08:00 PM EST US prime evening)
+    - cron: "0 13 * * *"   # 13:00 UTC (06:00 PM PKT / 08:00 AM EST Global triple-continent peak)
   workflow_dispatch: {}
 
 permissions:

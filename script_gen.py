@@ -42,22 +42,23 @@ SPECIES_SEARCH_ALIASES = {
     "common starling": ["european starling", "Sturnus vulgaris", "starling flock"],
 }
 
-PROMPT = """You write a viral, high-retention 30-40 second Urdu wildlife Reel for Facebook about a migratory bird species visiting Pakistan along the Indus Flyway.
+PROMPT = """You write a viral, high-retention 30-40 second wildlife Reel for Facebook about a migratory bird species visiting Pakistan along the Indus Flyway.
 
 Topic: {topic}
 
 Rules:
 - Focus entirely on the single migratory bird species named in the topic.
+- Title must be bilingual (English species name + Urdu name, max 80 chars, with emoji), e.g. "🦆 Mallard Duck (مالارڈ بطخ) | Wild Migratory Species"
 - Write 60-90 words of natural, exciting Pakistani Urdu narration in Urdu script (not Roman Urdu).
 - The very first sentence must be an electric curiosity hook (dramatic question, shocking fact, or vivid mystery) that stops someone scrolling within 2 seconds.
 - Highlight 2 fascinating, specific facts: its speed/flight stamina, diving depth, plumage colors, or wintering in Pakistani wetlands (e.g. Chashma, Taunsa, Haleji, Keenjhar).
 - END with an engaging comment prompt inviting viewers to comment, share their thoughts, or follow.
 - Use confident, energetic spoken Urdu. Never sound like a monotone textbook.
 - Give 5 English footage searches, all naming only this exact species and different natural behaviors.
-- Provide 15 trending viral hashtags relevant to Facebook Reels, wildlife, and Pakistan nature.
+- Provide 15 trending viral hashtags targeting global duck/waterfowl hunting enthusiasts, wildlife lovers, and Facebook Reels discovery.
 
 Return ONLY JSON with keys:
-title (max 80 chars, includes species name & emoji), narration (string), search_terms (list of 5), hashtags (list of 15, no # sign)."""
+title (bilingual, max 80 chars), narration (string), search_terms (list of 5), hashtags (list of 15, no # sign)."""
 
 URDU_BIRD_NAMES = {
     # Ducks & Waterfowl
@@ -67,6 +68,14 @@ URDU_BIRD_NAMES = {
     "Common Merganser": "کامن مرگانسر (ماہی خور بطخ)",
     "Common Teal": "عام ٹیل (چھوٹی مرغابی)",
     "Tufted Duck": "ٹفٹڈ بطخ (کلغی دار بطخ)",
+    "Northern Pintail": "ناردرن پن ٹیل (سیخ پر بطخ)",
+    "Garganey": "گارگنی بطخ (چیتوا)",
+    "Gadwall": "گیڈوال بطخ (بُوئر)",
+    "Northern Shoveler": "ناردرن شولر (بیلچہ بطخ)",
+    "Eurasian Wigeon": "یوریشین وجن (پیام)",
+    "Common Pochard": "کامن پوچارڈ (لال سر)",
+    "Red-crested Pochard": "سرخ کلغی دار پوچارڈ",
+    "Ruddy Shelduck": "سرخابی بطخ (چکوا چکوی)",
     # Geese & Swans
     "Canada Goose": "کینیڈین ہنس (کینیڈا گوز)",
     "Greylag Goose": "سرمئی ہنس (مگھ)",
@@ -276,6 +285,10 @@ def generate_script(topic: str) -> dict:
             raise ValueError(f"Claude returned narration ({word_count} words) outside target range.")
         data["search_terms"] = bird_search_terms(topic)
         species_raw = topic.split(":", 1)[0].strip()
+        bird_urdu = _urdu_species_name(species_raw)
+        # Ensure title is bilingual with English species name + Urdu name
+        if species_raw.casefold() not in data.get("title", "").casefold():
+            data["title"] = f"🦆 {species_raw} ({bird_urdu}) | Wild Migratory Species"
         spec_tags = _species_specific_tags(species_raw)
         # Ensure full targeted hunting, wildlife, and viral hashtags are included
         combined_tags = list(dict.fromkeys(spec_tags + data.get("hashtags", []) + VIRAL_BASE_TAGS))

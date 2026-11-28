@@ -122,14 +122,20 @@ def main():
         print("[dry-run] Skipping Facebook upload.")
         return
 
+    species_raw = topic.split(":", 1)[0].strip()
     tags = " ".join("#" + t.lstrip("#") for t in script["hashtags"])
     desc = (
         f"{script['title']}\n\n"
+        f"🌍 International Wildlife & Waterfowl Spotlight:\n"
+        f"• Species: {species_raw} | Family: Anatidae (Wild Waterfowl)\n"
+        f"• Flyway: Indus Flyway (International Migratory Route 4)\n"
+        f"• Habitat: Wild wetlands, freshwater lakes, and marshes\n"
+        f"• Status: 100% Authentic Wild Footage • Natural Habitat\n\n"
         f"{script['narration']}\n\n"
-        f"📍 Indus Flyway • 100% Authentic Wildlife\n"
-        f"🎯 Follow for daily wild ducks, waterfowl & wildlife sightings!\n\n"
+        f"🎯 Follow for daily wild duck, waterfowl & hunting species reels!\n"
+        f"💬 Have you ever spotted or called a {species_raw} in the wild? Share your sightings below!\n\n"
         f"{tags}\n\n"
-        f"Video clips: Pixabay."
+        f"Footage: Authentic wildlife stock (Pixabay)."
     )
     result = post_video(str(out), script["title"], desc)
     print(f"[facebook] Posted: {result}")
