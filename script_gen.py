@@ -42,21 +42,22 @@ SPECIES_SEARCH_ALIASES = {
     "common starling": ["european starling", "Sturnus vulgaris", "starling flock"],
 }
 
-PROMPT = """You write a viral, high-retention 40-50 second Urdu wildlife Reel for Facebook about a migratory bird species visiting Pakistan along the Indus Flyway.
+PROMPT = """You write a viral, high-retention 30-40 second Urdu wildlife Reel for Facebook about a migratory bird species visiting Pakistan along the Indus Flyway.
 
 Topic: {topic}
 
 Rules:
 - Focus entirely on the single migratory bird species named in the topic.
-- Write 70-110 words of natural, exciting Pakistani Urdu narration in Urdu script (not Roman Urdu).
-- Never use repetitive formulaic phrases like "کیا آپ جانتے ہیں کہ" every time. Vary the opening hook dynamically (e.g. dramatic question, surprising fact, vivid visual description, or speed record).
-- Highlight 2 fascinating, specific facts: its unique colors/plumage, extraordinary flight/diving ability, or winter behavior in Pakistani wetlands (e.g. Chashma, Taunsa, Haleji, Keenjhar).
-- END with an engaging comment hook inviting viewers to follow and share their sightings.
-- Use natural, energetic spoken Urdu sentences. Never sound like a dull textbook.
-- Give 5 English footage searches, all naming only this exact species and different views or actions.
+- Write 60-90 words of natural, exciting Pakistani Urdu narration in Urdu script (not Roman Urdu).
+- The very first sentence must be an electric curiosity hook (dramatic question, shocking fact, or vivid mystery) that stops someone scrolling within 2 seconds.
+- Highlight 2 fascinating, specific facts: its speed/flight stamina, diving depth, plumage colors, or wintering in Pakistani wetlands (e.g. Chashma, Taunsa, Haleji, Keenjhar).
+- END with an engaging comment prompt inviting viewers to comment, share their thoughts, or follow.
+- Use confident, energetic spoken Urdu. Never sound like a monotone textbook.
+- Give 5 English footage searches, all naming only this exact species and different natural behaviors.
+- Provide 15 trending viral hashtags relevant to Facebook Reels, wildlife, and Pakistan nature.
 
 Return ONLY JSON with keys:
-title (max 80 chars), narration (string), search_terms (list of 5), hashtags (list of 8, no # sign)."""
+title (max 80 chars, includes species name & emoji), narration (string), search_terms (list of 5), hashtags (list of 15, no # sign)."""
 
 URDU_BIRD_NAMES = {
     # Ducks & Waterfowl
@@ -178,6 +179,26 @@ def _urdu_species_name(name: str) -> str:
     return name
 
 
+VIRAL_BASE_TAGS = [
+    "Reels",
+    "ReelsFB",
+    "ViralReels",
+    "TrendingReels",
+    "ReelsViral",
+    "ExplorePage",
+    "FYP",
+    "ViralVideo",
+    "PakistanWildlife",
+    "IndusFlyway",
+    "BirdWatching",
+    "Wildlife",
+    "NatureLovers",
+    "WildBirds",
+    "Waterfowl",
+    "BeautifulPakistan",
+]
+
+
 def _fallback(topic: str) -> dict:
     name, _, focus = topic.partition(":")
     bird = _urdu_species_name(name.strip())
@@ -187,19 +208,10 @@ def _fallback(topic: str) -> dict:
     narration = template.format(bird=bird, focus=focus)
 
     return {
-        "title": f"{bird} | پاکستان کا نایاب مہاجر پرندہ",
+        "title": f"🦆 {bird} | پاکستان کا نایاب مہاجر پرندہ",
         "narration": narration,
         "search_terms": bird_search_terms(topic),
-        "hashtags": [
-            "Reels",
-            "ViralReels",
-            "PakistanWildlife",
-            "MigratoryBirds",
-            "IndusFlyway",
-            "Waterfowl",
-            "BirdWatching",
-            "NatureLovers",
-        ],
+        "hashtags": VIRAL_BASE_TAGS,
     }
 
 
@@ -231,9 +243,12 @@ def generate_script(topic: str) -> dict:
         if not re.search(r"[\u0600-\u06FF]", data["narration"]):
             raise ValueError("Claude returned narration without Urdu script.")
         word_count = len(data["narration"].split())
-        if not 60 <= word_count <= 140:
+        if not 50 <= word_count <= 140:
             raise ValueError(f"Claude returned narration ({word_count} words) outside target range.")
         data["search_terms"] = bird_search_terms(topic)
+        # Ensure full 16+ viral hashtags are included
+        combined_tags = list(dict.fromkeys(data.get("hashtags", []) + VIRAL_BASE_TAGS))
+        data["hashtags"] = combined_tags[:18]
         return data
     except Exception as e:
         print(f"[script] Claude call failed ({e}); using dynamic fallback template.")

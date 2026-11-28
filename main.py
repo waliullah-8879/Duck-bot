@@ -39,8 +39,8 @@ def main():
     ap.add_argument(
         "--audio-mode",
         choices=["nature", "mixed", "voice"],
-        default=os.getenv("AUDIO_MODE", "nature"),
-        help="audio soundtrack: 'nature' (authentic species call + natural water & all birds), 'mixed', or 'voice'",
+        default=os.getenv("AUDIO_MODE", "mixed"),
+        help="audio soundtrack: 'mixed' (strong voice + natural water & authentic species calls), 'nature', or 'voice'",
     )
     args = ap.parse_args()
 
@@ -108,7 +108,7 @@ def main():
 
             slug = "".join(c if c.isalnum() else "_" for c in script["title"])[:40]
             out = OUT_DIR / f"{slug}.mp4"
-            build_video(clips, audio, attempt_work, out, bg_audio=bg_audio)
+            build_video(clips, audio, attempt_work, out, bg_audio=bg_audio, species=species)
             print(f"[video] {out}")
             break
         else:

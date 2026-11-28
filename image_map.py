@@ -7,8 +7,9 @@ reference image map to None; the verifier skips them gracefully.
 """
 from pathlib import Path
 
-# Base directory where user-uploaded reference images are stored
-_REF_DIR = Path(r"C:\Users\asus'\.gemini\antigravity\brain\ee7a8668-6d7c-47db-933b-60dde60cd936\.user_uploaded")
+# Base directories where reference images are stored
+_REPO_REF_DIR = Path(__file__).parent / "assets" / "references"
+_FALLBACK_REF_DIR = Path(r"C:\Users\asus'\.gemini\antigravity\brain\ee7a8668-6d7c-47db-933b-60dde60cd936\.user_uploaded")
 
 # Species name (casefold) → reference image filename
 # Charts uploaded cover: Types of Ducks (AnimalSpot), Duck ID Chart,
@@ -101,6 +102,9 @@ def get_reference_image(species: str) -> Path | None:
     filename = _RAW_MAP.get(species.casefold())
     if filename is None:
         return None
-    path = _REF_DIR / filename
-    return path if path.exists() else None
+    for ref_dir in (_REPO_REF_DIR, _FALLBACK_REF_DIR):
+        candidate = ref_dir / filename
+        if candidate.exists():
+            return candidate
+    return None
 
