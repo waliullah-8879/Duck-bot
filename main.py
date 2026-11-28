@@ -123,7 +123,14 @@ def main():
         return
 
     tags = " ".join("#" + t.lstrip("#") for t in script["hashtags"])
-    desc = f"{script['title']}\n\n{script['narration']}\n\n{tags}\n\nVideo clips: Pixabay."
+    desc = (
+        f"{script['title']}\n\n"
+        f"{script['narration']}\n\n"
+        f"📍 Indus Flyway • 100% Authentic Wildlife\n"
+        f"🎯 Follow for daily wild ducks, waterfowl & wildlife sightings!\n\n"
+        f"{tags}\n\n"
+        f"Video clips: Pixabay."
+    )
     result = post_video(str(out), script["title"], desc)
     print(f"[facebook] Posted: {result}")
     if not args.topic:

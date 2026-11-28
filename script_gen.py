@@ -180,38 +180,67 @@ def _urdu_species_name(name: str) -> str:
 
 
 VIRAL_BASE_TAGS = [
-    "Reels",
+    # Global Hunting Community
+    "DuckHunting",
+    "WaterfowlHunting",
+    "GooseHunting",
+    "HuntingSeason",
+    "DuckSeason",
+    "Waterfowlers",
+    "BirdHunting",
+    "HuntingLife",
+    # Global Wild Animals & Nature
+    "WildAnimals",
+    "WildlifePhotography",
+    "Waterfowl",
+    "BirdWatching",
+    "WildBirds",
+    "BirdLovers",
+    "NatureLovers",
+    # Global Viral Algorithm Reach
     "ReelsFB",
+    "Reels",
     "ViralReels",
     "TrendingReels",
-    "ReelsViral",
     "ExplorePage",
     "FYP",
-    "ViralVideo",
+    # Regional
     "PakistanWildlife",
     "IndusFlyway",
-    "BirdWatching",
-    "Wildlife",
-    "NatureLovers",
-    "WildBirds",
-    "Waterfowl",
-    "BeautifulPakistan",
 ]
+
+
+def _species_specific_tags(species_name: str) -> list[str]:
+    """Generate dynamic English tags for hunting and wildlife enthusiasts."""
+    clean = re.sub(r"[^a-zA-Z0-9]+", "", species_name)
+    tags = [clean]
+    lowered = species_name.casefold()
+    if "duck" in lowered or "teal" in lowered or "wigeon" in lowered or "mallard" in lowered or "pintail" in lowered:
+        tags.extend([f"{clean}Hunting", "DuckCalling", "MallardDuck", "DucksOfInstagram"])
+    elif "goose" in lowered or "geese" in lowered:
+        tags.extend([f"{clean}Hunting", "GooseCalls", "CanadaGeese"])
+    elif "crane" in lowered or "stork" in lowered or "pelican" in lowered or "flamingo" in lowered:
+        tags.extend(["MigratoryBirds", "WetlandWildlife", "RareBirds"])
+    return tags
 
 
 def _fallback(topic: str) -> dict:
     name, _, focus = topic.partition(":")
-    bird = _urdu_species_name(name.strip())
+    species_raw = name.strip()
+    bird = _urdu_species_name(species_raw)
     focus = focus.strip().rstrip(".")
     # Pick randomly from the 8 diverse templates so no two days sound alike
     template = random.choice(VARIED_TEMPLATES)
     narration = template.format(bird=bird, focus=focus)
 
+    spec_tags = _species_specific_tags(species_raw)
+    all_tags = list(dict.fromkeys(spec_tags + VIRAL_BASE_TAGS))
+
     return {
-        "title": f"🦆 {bird} | پاکستان کا نایاب مہاجر پرندہ",
+        "title": f"🦆 {species_raw} ({bird}) | Wild Migratory Species",
         "narration": narration,
         "search_terms": bird_search_terms(topic),
-        "hashtags": VIRAL_BASE_TAGS,
+        "hashtags": all_tags[:22],
     }
 
 
@@ -246,9 +275,11 @@ def generate_script(topic: str) -> dict:
         if not 50 <= word_count <= 140:
             raise ValueError(f"Claude returned narration ({word_count} words) outside target range.")
         data["search_terms"] = bird_search_terms(topic)
-        # Ensure full 16+ viral hashtags are included
-        combined_tags = list(dict.fromkeys(data.get("hashtags", []) + VIRAL_BASE_TAGS))
-        data["hashtags"] = combined_tags[:18]
+        species_raw = topic.split(":", 1)[0].strip()
+        spec_tags = _species_specific_tags(species_raw)
+        # Ensure full targeted hunting, wildlife, and viral hashtags are included
+        combined_tags = list(dict.fromkeys(spec_tags + data.get("hashtags", []) + VIRAL_BASE_TAGS))
+        data["hashtags"] = combined_tags[:22]
         return data
     except Exception as e:
         print(f"[script] Claude call failed ({e}); using dynamic fallback template.")
