@@ -38,9 +38,9 @@ def main():
     ap.add_argument("--topic", help="override the topic")
     ap.add_argument(
         "--audio-mode",
-        choices=["nature", "mixed", "voice"],
-        default=os.getenv("AUDIO_MODE", "mixed"),
-        help="audio soundtrack: 'mixed' (strong voice + natural water & authentic species calls), 'nature', or 'voice'",
+        choices=["voice", "water", "nature"],
+        default=os.getenv("AUDIO_MODE", "voice"),
+        help="audio soundtrack: 'voice' (clean studio documentary voiceover), 'water' (voiceover + gentle water ripples), or 'nature'",
     )
     args = ap.parse_args()
 
@@ -85,24 +85,23 @@ def main():
             mode = args.audio_mode.lower()
             print(f"[audio] Selected audio mode: {mode}")
 
-            if mode == "nature":
-                # Authentic species calls + natural water ripples/splashes + ambient wetland birds
-                target_dur = float(os.getenv("VIDEO_DURATION", "40.0"))
-                audio = Path(synthesize_nature_audio(species, target_dur, attempt_work / "nature.mp3"))
-                bg_audio = None
-            elif mode == "mixed":
-                # Narration voiceover + atmospheric species calls & water sounds in background
+            if mode == "water":
+                # Voiceover + gentle natural water flow only (no fake bird sounds)
                 voice_audio = Path(synthesize(script["narration"], str(attempt_work / "voice.mp3")))
                 dur_out = subprocess.run(
                     ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(voice_audio)],
                     capture_output=True, text=True, check=True,
                 ).stdout.strip()
                 v_dur = float(dur_out) if dur_out else 40.0
-                nature_audio = synthesize_nature_audio(species, v_dur + 0.5, attempt_work / "nature.mp3")
+                water_audio = synthesize_nature_audio(species, v_dur + 0.5, attempt_work / "water.mp3", water_only=True)
                 audio = voice_audio
-                bg_audio = Path(nature_audio)
+                bg_audio = Path(water_audio)
+            elif mode == "nature":
+                target_dur = float(os.getenv("VIDEO_DURATION", "40.0"))
+                audio = Path(synthesize_nature_audio(species, target_dur, attempt_work / "nature.mp3", water_only=True))
+                bg_audio = None
             else:
-                # Narration voice only
+                # Default: Clean studio documentary voiceover only (NO background bird noise)
                 audio = Path(synthesize(script["narration"], str(attempt_work / "voice.mp3")))
                 bg_audio = None
 
